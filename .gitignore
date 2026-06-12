@@ -1,0 +1,42 @@
+# ── Secrets & config ──────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+vault-token*
+secrets/
+
+# ── Python ────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+htmlcov/
+
+# ── Node / frontend ───────────────────────────────
+node_modules/
+frontend/dist/
+frontend/.vite/
+npm-debug.log*
+
+# ── Generated / regenerable ───────────────────────
+graphify-out/
+logs/
+*.log
+
+# ── Training data & notebook noise ────────────────
+training/data/
+.ipynb_checkpoints/
+
+# ── OS & editor junk ──────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+.claude/settings.local.json

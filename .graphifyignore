@@ -1,0 +1,9 @@
+graphify-out/
+.specify/
+.claude/skills/graphify/
+node_modules/
+dist/
+training/data/
+.venv/
+venv/
+__pycache__/
