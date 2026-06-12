@@ -43,7 +43,8 @@ Each phase ships its tests and ends with CI green and a graphify refresh.
 
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan
+shell commands, and other important information, read the current plan:
+`specs/001-repo-skeleton/plan.md` (Phase 0 — repository skeleton & project map).
 <!-- SPECKIT END -->
 
 ## graphify
