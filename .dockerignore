@@ -1,0 +1,26 @@
+# Keep build contexts lean and secrets out of images (constitution Art. V).
+.git/
+.gitignore
+.dockerignore
+**/__pycache__/
+**/*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+node_modules/
+frontend/dist/
+frontend/.vite/
+graphify-out/
+training/data/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.idea/
+.vscode/
+specs/
+docs/
+briefs/

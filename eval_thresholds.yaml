@@ -1,0 +1,43 @@
+# Raseed CI evaluation thresholds (placeholders — Phase 0).
+# Each later phase replaces its gate's placeholder with a real number backed by a
+# DECISIONS.md entry. CI gates read this file; a regression below threshold blocks
+# merge (constitution Art. V). Phase 0 ships only lint + type-check green; the
+# numeric gates below are inert placeholders until their phase lands.
+
+# Gate 1 — categorizer (Phase 2)
+categorizer:
+  macro_f1_min: null          # must beat the committed baseline on the frozen holdout
+  min_per_class_f1: null
+  max_inference_latency_ms: null
+
+# Gate 2 — forecaster (Phase 3)
+forecaster:
+  mae_max: null               # must beat the day-of-week baseline on the golden fixture
+  mape_max: null
+
+# Gate 3 — tool selection (Phase 4)
+router:
+  tool_selection_accuracy_min: null
+
+# Gate 4 — RAG (Phase 4)
+rag:
+  hit_at_5_min: null
+  mrr_min: null
+  faithfulness_min: null
+
+# Gate 5 — red-team (Phase 6)
+redteam:
+  max_injection_success_rate: 0.0
+  max_cross_user_leak: 0
+
+# Gate 6 — redaction (Phase 6)
+redaction:
+  pii_leak_count_max: 0
+
+# Gate 7 — drift fire (Phase 5, training profile on)
+drift:
+  must_fire_on_simulated_drift: null
+
+# Gate 8 — compose smoke (Phase 0 scaffold -> wired later)
+compose_smoke:
+  all_default_services_healthy: true

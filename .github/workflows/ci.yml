@@ -1,0 +1,71 @@
+# CI: lint + type-check only this phase, green on the empty skeleton. NEVER starts
+# the compose stack — CI must not depend on the running stack (constitution Art. V).
+# Later phases add the eight eval gates (categorizer F1, forecaster MAE, etc.).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: backend lint + type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend (with dev tools)
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Ruff (lint)
+        working-directory: backend
+        run: ruff check .
+      - name: Mypy (type-check)
+        working-directory: backend
+        run: mypy .
+      - name: Pytest (boot smoke)
+        working-directory: backend
+        run: pytest -q
+
+  modelserver:
+    name: modelserver lint + type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install modelserver (with dev tools)
+        working-directory: modelserver
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Ruff (lint)
+        working-directory: modelserver
+        run: ruff check .
+      - name: Mypy (type-check)
+        working-directory: modelserver
+        run: mypy .
+
+  frontend:
+    name: frontend lint + type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install
+        working-directory: frontend
+        run: npm install
+      - name: Type-check
+        working-directory: frontend
+        run: npm run typecheck
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint

@@ -1,0 +1,22 @@
+# Trainer deps: the ONLY place torch/transformers appear. This image is built and
+# run exclusively under the `training` compose profile (constitution Art. III).
+[project]
+name = "raseed-trainer"
+version = "0.0.0"
+description = "Heavy training image (torch). Profile-gated; never on a request path."
+requires-python = ">=3.12"
+dependencies = [
+    "torch>=2.3",
+    "transformers>=4.42",
+    "onnx>=1.16",
+    "rq>=1.16",
+    "redis>=5.0",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true

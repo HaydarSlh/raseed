@@ -36,12 +36,12 @@ Multi-service monorepo per plan.md: `backend/`, `modelserver/`, `trainer/`,
 
 **Purpose**: Repository-wide scaffolding every service and story depends on.
 
-- [ ] T001 Create the full agreed top-level tree with `.gitkeep` where empty: `backend/app/{core,api,services,repositories,domain,infra,workers}`, `backend/{alembic/versions,prompts,tests/{unit,golden,redteam}}`, `modelserver/`, `trainer/`, `training/notebooks/`, `frontend/src/{pages,components,api}`, `rag-corpus/`, `scripts/`, `docs/`, `.github/workflows/`
-- [ ] T002 [P] Create `.gitignore` (venvs, `node_modules/`, `dist/`, `graphify-out/`, `training/data/`, `.env`) and `.gitattributes` initializing Git LFS tracking for model artifacts, fixtures, and the frozen holdout
-- [ ] T003 [P] Create `.graphifyignore` (`node_modules/`, `graphify-out/`, `training/data/`, venvs, `dist/`)
-- [ ] T004 [P] Create `.env.example` at repo root with every variable needed to boot the default stack (DB, Redis, MinIO, Vault, service ports) with safe local defaults — copy to `.env` is sufficient (FR-006)
-- [ ] T005 [P] Create `eval_thresholds.yaml` at repo root with placeholder thresholds for the 8 CI gates (FR-009)
-- [ ] T006 [P] Create `docs/DECISIONS.md` and `docs/DESIGN.md` placeholders with header comments (scaling/erasure notes deferred to later phases)
+- [X] T001 Create the full agreed top-level tree with `.gitkeep` where empty: `backend/app/{core,api,services,repositories,domain,infra,workers}`, `backend/{alembic/versions,prompts,tests/{unit,golden,redteam}}`, `modelserver/`, `trainer/`, `training/notebooks/`, `frontend/src/{pages,components,api}`, `rag-corpus/`, `scripts/`, `docs/`, `.github/workflows/`
+- [X] T002 [P] Create `.gitignore` (venvs, `node_modules/`, `dist/`, `graphify-out/`, `training/data/`, `.env`) and `.gitattributes` initializing Git LFS tracking for model artifacts, fixtures, and the frozen holdout
+- [X] T003 [P] Create `.graphifyignore` (`node_modules/`, `graphify-out/`, `training/data/`, venvs, `dist/`)
+- [X] T004 [P] Create `.env.example` at repo root with every variable needed to boot the default stack (DB, Redis, MinIO, Vault, service ports) with safe local defaults — copy to `.env` is sufficient (FR-006)
+- [X] T005 [P] Create `eval_thresholds.yaml` at repo root with placeholder thresholds for the 8 CI gates (FR-009)
+- [X] T006 [P] Create `docs/DECISIONS.md` and `docs/DESIGN.md` placeholders with header comments (scaling/erasure notes deferred to later phases)
 
 **Checkpoint**: Tree and root scaffolding exist; nothing boots yet.
 
@@ -57,35 +57,35 @@ US2 needs the files to audit, US3 needs the tooling configs.
 
 ### Backend (layered per constitution Article I)
 
-- [ ] T007 Create `backend/pyproject.toml` — deps (FastAPI, uvicorn, async SQLAlchemy, pydantic-settings, structlog, httpx, tenacity, RQ, alembic) + ruff + mypy config, Python 3.12
-- [ ] T008 [P] Create `backend/app/core/config.py` — single `Settings` (pydantic-settings, `extra='forbid'`, fail-fast on missing required values)
-- [ ] T009 [P] Create `backend/app/core/logging.py` — structlog JSON config with request-id support
-- [ ] T010 [P] Create `backend/app/core/exceptions.py` — domain exception hierarchy mapped to structured HTTP errors
-- [ ] T011 Create `backend/app/core/lifespan.py` — lifespan context constructing stub singletons (db engine, redis, minio, vault, llm adapter, modelserver client) (depends on T008, T009)
-- [ ] T012 [P] Create `backend/app/infra/` adapter stubs (`db.py`, `redis.py`, `minio.py`, `vault.py`, `llm.py`, `modelserver_client.py`) — header comments + signatures only, no logic
-- [ ] T013 [P] Create package stubs for `backend/app/api/`, `backend/app/services/`, `backend/app/repositories/`, `backend/app/domain/` (`__init__.py` + a header-only placeholder module each) — no endpoints, models, or business logic (FR-012)
-- [ ] T014 Create `backend/main.py` — FastAPI app factory wiring lifespan + a `/healthz` route; boots with no business endpoints (depends on T008–T013)
-- [ ] T015 [P] Create `backend/app/workers/` entrypoint stubs (`stats.py`, `drift.py`, `slack_webhook.py`) + a worker bootstrap that connects to RQ (header comments; ops-signals-only note)
-- [ ] T016 [P] Create `backend/alembic/env.py`, `backend/alembic.ini`, and an empty baseline revision in `backend/alembic/versions/`
-- [ ] T017 [P] Create `backend/Dockerfile` (`python:3.12-slim`, installs backend; used by `backend`, `worker`, and `migrate`)
-- [ ] T018 [P] Create `backend/tests/unit/test_app_boot.py` — import/boot smoke test asserting the app factory builds and `/healthz` is registered (no stack needed)
-- [ ] T019 [P] Create `backend/prompts/.gitkeep` with a header note that prompts are version-controlled files (Article IV)
+- [X] T007 Create `backend/pyproject.toml` — deps (FastAPI, uvicorn, async SQLAlchemy, pydantic-settings, structlog, httpx, tenacity, RQ, alembic) + ruff + mypy config, Python 3.12
+- [X] T008 [P] Create `backend/app/core/config.py` — single `Settings` (pydantic-settings, `extra='forbid'`, fail-fast on missing required values)
+- [X] T009 [P] Create `backend/app/core/logging.py` — structlog JSON config with request-id support
+- [X] T010 [P] Create `backend/app/core/exceptions.py` — domain exception hierarchy mapped to structured HTTP errors
+- [X] T011 Create `backend/app/core/lifespan.py` — lifespan context constructing stub singletons (db engine, redis, minio, vault, llm adapter, modelserver client) (depends on T008, T009)
+- [X] T012 [P] Create `backend/app/infra/` adapter stubs (`db.py`, `redis.py`, `minio.py`, `vault.py`, `llm.py`, `modelserver_client.py`) — header comments + signatures only, no logic
+- [X] T013 [P] Create package stubs for `backend/app/api/`, `backend/app/services/`, `backend/app/repositories/`, `backend/app/domain/` (`__init__.py` + a header-only placeholder module each) — no endpoints, models, or business logic (FR-012)
+- [X] T014 Create `backend/main.py` — FastAPI app factory wiring lifespan + a `/healthz` route; boots with no business endpoints (depends on T008–T013)
+- [X] T015 [P] Create `backend/app/workers/` entrypoint stubs (`stats.py`, `drift.py`, `slack_webhook.py`) + a worker bootstrap that connects to RQ (header comments; ops-signals-only note)
+- [X] T016 [P] Create `backend/alembic/env.py`, `backend/alembic.ini`, and an empty baseline revision in `backend/alembic/versions/`
+- [X] T017 [P] Create `backend/Dockerfile` (`python:3.12-slim`, installs backend; used by `backend`, `worker`, and `migrate`)
+- [X] T018 [P] Create `backend/tests/unit/test_app_boot.py` — import/boot smoke test asserting the app factory builds and `/healthz` is registered (no stack needed)
+- [X] T019 [P] Create `backend/prompts/.gitkeep` with a header note that prompts are version-controlled files (Article IV)
 
 ### model-server (lean, no torch)
 
-- [ ] T020 [P] Create `modelserver/app.py` — FastAPI `/healthz` returning `{"status":"ok","model":"none","detail":"no model loaded"}`; no hash guard (contracts/modelserver-healthz.md)
-- [ ] T021 [P] Create `modelserver/pyproject.toml` (fastapi, uvicorn, onnxruntime, numpy — **no torch**) and `modelserver/Dockerfile` (lean)
+- [X] T020 [P] Create `modelserver/app.py` — FastAPI `/healthz` returning `{"status":"ok","model":"none","detail":"no model loaded"}`; no hash guard (contracts/modelserver-healthz.md)
+- [X] T021 [P] Create `modelserver/pyproject.toml` (fastapi, uvicorn, onnxruntime, numpy — **no torch**) and `modelserver/Dockerfile` (lean)
 
 ### trainer (heavy, profile-gated)
 
-- [ ] T022 [P] Create `trainer/train.py` entrypoint stub, `trainer/pyproject.toml` (torch, transformers), and `trainer/Dockerfile` — built only under the `training` compose profile, never on a request path
-- [ ] T023 [P] Create `training/notebooks/README.md` placeholder for Colab foundation-training notebooks (header comment)
+- [X] T022 [P] Create `trainer/train.py` entrypoint stub, `trainer/pyproject.toml` (torch, transformers), and `trainer/Dockerfile` — built only under the `training` compose profile, never on a request path
+- [X] T023 [P] Create `training/notebooks/README.md` placeholder for Colab foundation-training notebooks (header comment)
 
 ### frontend (React + Vite)
 
-- [ ] T024 [P] Create `frontend/package.json`, `frontend/tsconfig.json`, `frontend/vite.config.ts` (React 18, Vite 5, Node 20; scripts: `dev`, `build`, `typecheck`, `lint`)
-- [ ] T025 [P] Create `frontend/index.html` and `frontend/src/{main.tsx, App.tsx}` + `pages/`, `components/`, `api/` stubs with header comments (minimal app that renders)
-- [ ] T026 [P] Create `frontend/Dockerfile`
+- [X] T024 [P] Create `frontend/package.json`, `frontend/tsconfig.json`, `frontend/vite.config.ts` (React 18, Vite 5, Node 20; scripts: `dev`, `build`, `typecheck`, `lint`)
+- [X] T025 [P] Create `frontend/index.html` and `frontend/src/{main.tsx, App.tsx}` + `pages/`, `components/`, `api/` stubs with header comments (minimal app that renders)
+- [X] T026 [P] Create `frontend/Dockerfile`
 
 **Checkpoint**: Every service has bootable, import-clean code with header comments.
 
@@ -101,12 +101,12 @@ boot; migrate runs once and exits.
 services healthy, `trainer` absent, modelserver `/healthz` reports "no model
 loaded", and a missing `.env` fails clearly.
 
-- [ ] T027 [US1] Create `docker-compose.yml` with services `postgres` (pgvector), `redis`, `minio`, `vault`, `migrate`, `backend`, `modelserver`, `worker`, `frontend`, `trainer`; services address peers by service name (no localhost); `trainer` set to `profiles: ["training"]` (contracts/compose-services.md)
-- [ ] T028 [US1] Add named volumes `pgdata`, `redisdata`, `miniodata` and attach to `postgres`, `redis`, `minio` (FR-005); no service persists raw user files (Article II)
-- [ ] T029 [P] [US1] Add healthchecks for all default services (`pg_isready`, `redis-cli ping`, MinIO `/minio/health/live`, `vault status`, backend & modelserver `/healthz`, frontend index) (R2)
-- [ ] T030 [US1] Configure `migrate` as a one-shot service (`restart: "no"`) running `alembic upgrade head` then exiting; `backend` `depends_on` migrate `service_completed_successfully` and infra `service_healthy` (depends on T027, T029)
-- [ ] T031 [US1] Wire `.env`/compose `env_file` so the default stack boots from a copied `.env`; ensure a missing `.env` produces a clear, actionable failure (edge case)
-- [ ] T032 [US1] Create `scripts/smoke_compose.sh` — bring up the default stack, assert all default services healthy and `trainer` absent (scaffold for CI gate 8; not wired into CI this phase)
+- [X] T027 [US1] Create `docker-compose.yml` with services `postgres` (pgvector), `redis`, `minio`, `vault`, `migrate`, `backend`, `modelserver`, `worker`, `frontend`, `trainer`; services address peers by service name (no localhost); `trainer` set to `profiles: ["training"]` (contracts/compose-services.md)
+- [X] T028 [US1] Add named volumes `pgdata`, `redisdata`, `miniodata` and attach to `postgres`, `redis`, `minio` (FR-005); no service persists raw user files (Article II)
+- [X] T029 [P] [US1] Add healthchecks for all default services (`pg_isready`, `redis-cli ping`, MinIO `/minio/health/live`, `vault status`, backend & modelserver `/healthz`, frontend index) (R2)
+- [X] T030 [US1] Configure `migrate` as a one-shot service (`restart: "no"`) running `alembic upgrade head` then exiting; `backend` `depends_on` migrate `service_completed_successfully` and infra `service_healthy` (depends on T027, T029)
+- [X] T031 [US1] Wire `.env`/compose `env_file` so the default stack boots from a copied `.env`; ensure a missing `.env` produces a clear, actionable failure (edge case)
+- [X] T032 [US1] Create `scripts/smoke_compose.sh` — bring up the default stack, assert all default services healthy and `trainer` absent (scaffold for CI gate 8; not wired into CI this phase)
 
 **Checkpoint**: The empty stack boots from a fresh clone — MVP delivered.
 
@@ -121,10 +121,10 @@ knowledge graph resolves a responsibility to its path.
 header comments, then `graphify query "where does ingestion live"` returns the
 correct path.
 
-- [ ] T033 [P] [US2] Create `rag-corpus/.gitkeep` and `scripts/.gitkeep` placeholders with header comments describing each area's responsibility
-- [ ] T034 [US2] Sweep the whole tree and ensure 100% of stub files begin with a single-responsibility header comment; add any missing ones (FR-002, SC-002)
-- [ ] T035 [US2] Run `graphify update .` to regenerate the knowledge graph from the skeleton
-- [ ] T036 [US2] Verify `graphify query "where does ingestion live"` resolves to the correct ingestion path (SC-005); record the result in quickstart notes if useful
+- [X] T033 [P] [US2] Create `rag-corpus/.gitkeep` and `scripts/.gitkeep` placeholders with header comments describing each area's responsibility
+- [X] T034 [US2] Sweep the whole tree and ensure 100% of stub files begin with a single-responsibility header comment; add any missing ones (FR-002, SC-002)
+- [X] T035 [US2] Run `graphify update .` to regenerate the knowledge graph from the skeleton
+- [X] T036 [US2] Verify `graphify query "where does ingestion live"` resolves to the correct ingestion path (SC-005); record the result in quickstart notes if useful
 
 **Checkpoint**: Project map complete and navigable.
 
@@ -139,9 +139,9 @@ stack.
 `tsc` + `eslint` (frontend) pass locally; the GitHub Actions workflow is green and
 never starts compose.
 
-- [ ] T037 [P] [US3] Create `frontend/.eslintrc.*` and ensure `typecheck`/`lint` npm scripts run cleanly on the stub app
-- [ ] T038 [US3] Create `.github/workflows/ci.yml` — jobs: backend (`ruff check` + `mypy`) and frontend (`tsc --noEmit` + `eslint`); installs deps only, never starts the compose stack (FR-008, Article V)
-- [ ] T039 [US3] Run backend `ruff check . && mypy .` and frontend `npm run typecheck && npm run lint` locally; fix any stub that fails so the skeleton is green (SC-006)
+- [X] T037 [P] [US3] Create `frontend/.eslintrc.*` and ensure `typecheck`/`lint` npm scripts run cleanly on the stub app
+- [X] T038 [US3] Create `.github/workflows/ci.yml` — jobs: backend (`ruff check` + `mypy`) and frontend (`tsc --noEmit` + `eslint`); installs deps only, never starts the compose stack (FR-008, Article V)
+- [X] T039 [US3] Run backend `ruff check . && mypy .` and frontend `npm run typecheck && npm run lint` locally; fix any stub that fails so the skeleton is green (SC-006)
 
 **Checkpoint**: CI green on lint + type-check, stack-independent.
 
@@ -151,9 +151,9 @@ never starts compose.
 
 **Purpose**: Final validation and repo-level documentation.
 
-- [ ] T040 Run full `quickstart.md` validation (all 6 scenarios) end-to-end and confirm acceptance criteria + contracts are satisfied
-- [ ] T041 [P] Update root `README.md` with the two-step boot and the `--profile training` note for the trainer
-- [ ] T042 Final `graphify update .` refresh so the committed graph reflects the complete skeleton (Workflow rule: phase ends with a graphify refresh)
+- [X] T040 Run full `quickstart.md` validation (all 6 scenarios) end-to-end and confirm acceptance criteria + contracts are satisfied
+- [X] T041 [P] Update root `README.md` with the two-step boot and the `--profile training` note for the trainer
+- [X] T042 Final `graphify update .` refresh so the committed graph reflects the complete skeleton (Workflow rule: phase ends with a graphify refresh)
 
 ---
 

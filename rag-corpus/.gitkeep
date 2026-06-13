@@ -1,0 +1,4 @@
+# Shared, openly-licensed financial-literacy corpus (CFPB/MoneyHelper-class + own
+# explainers). Heading-aware chunked and embedded into pgvector in Phase 4. This
+# is the SHARED corpus; per-user memory vectors are the user-filtered ones. The
+# RAG path never answers numeric personal questions — exact SQL does (Art. IV).

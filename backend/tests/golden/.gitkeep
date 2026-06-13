@@ -1,0 +1,3 @@
+# Golden fixtures for CI gates (categorizer holdout, forecasting fixture, RAG/tool
+# golden sets). Committed via Git LFS; CI reads them here, never from the running
+# stack (constitution Art. V). Populated from Phase 2 onward.

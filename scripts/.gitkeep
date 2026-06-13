@@ -1,0 +1,2 @@
+# Operational scripts (compose smoke, drift simulation, data seeding). See
+# smoke_compose.sh; simulate_drift.py and seeders are added in later phases.

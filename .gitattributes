@@ -1,0 +1,19 @@
+# Git LFS tracking — CI-required binary/large artifacts live here, never in the
+# running stack (constitution Art. V). Model artifacts, fixtures, and the frozen
+# holdout are pulled from LFS/release assets by CI.
+*.onnx        filter=lfs diff=lfs merge=lfs -text
+*.pt          filter=lfs diff=lfs merge=lfs -text
+*.bin         filter=lfs diff=lfs merge=lfs -text
+*.pkl         filter=lfs diff=lfs merge=lfs -text
+*.npy         filter=lfs diff=lfs merge=lfs -text
+*.npz         filter=lfs diff=lfs merge=lfs -text
+*.parquet     filter=lfs diff=lfs merge=lfs -text
+
+# Frozen holdout / golden fixtures (committed for CI gates, never from the stack)
+backend/tests/golden/**/*.csv   filter=lfs diff=lfs merge=lfs -text
+backend/tests/golden/**/*.json  filter=lfs diff=lfs merge=lfs -text
+
+# Normalize line endings for text so cross-OS clones boot identically
+* text=auto eol=lf
+*.png binary
+*.jpg binary
