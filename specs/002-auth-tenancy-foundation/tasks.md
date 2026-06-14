@@ -122,7 +122,7 @@ call outside the adapter (quickstart Scenarios 4–6).
 ## Phase 6: Polish & Cross-Cutting Concerns
 
 - [X] T028 [P] Record Phase 1 decisions with numbers in `docs/DECISIONS.md` (token lifetime, retry/backoff policy, RLS reset strategy, and "memory.embedding deferred to Phase 4 with the embedder decision" — M1)
-- [ ] T029 Run the full `quickstart.md` validation (all 6 scenarios) against the live stack and confirm acceptance criteria + contracts are satisfied
+- [X] T029 Run the full `quickstart.md` validation (all 6 scenarios) against the live stack and confirm acceptance criteria + contracts are satisfied
 - [X] T030 Refresh the knowledge graph: `graphify update .`
 
 ---

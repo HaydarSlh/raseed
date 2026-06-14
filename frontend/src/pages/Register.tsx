@@ -1,6 +1,6 @@
 // Minimal register page: posts email+password to /auth/register then redirects to login.
-import React, { FormEvent, useState } from 'react';
-import { API_BASE_URL, authApi } from '../api/client';
+import { FormEvent, useState } from 'react';
+import { authApi } from '../api/client';
 
 export default function Register(): JSX.Element {
   const [email, setEmail] = useState('');

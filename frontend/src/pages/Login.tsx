@@ -1,5 +1,5 @@
 // Minimal login page: posts credentials, stores bearer token in localStorage.
-import React, { FormEvent, useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { authApi } from '../api/client';
 
 export default function Login(): JSX.Element {

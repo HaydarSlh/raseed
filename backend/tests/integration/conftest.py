@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import os
 import uuid
 
@@ -22,11 +23,27 @@ _SYNC_URL = TEST_DATABASE_URL.replace("+asyncpg", "+psycopg2")
 
 
 @pytest.fixture(scope="session")
+def event_loop():
+    """Single event loop for the entire test session (required for session-scoped async fixtures)."""
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
+
+
+@pytest.fixture(scope="session")
 def run_migrations() -> None:
-    """Apply all Alembic migrations to the test database (session-scoped, runs once)."""
+    """Apply all Alembic migrations and initialise the global engine (session-scoped, runs once)."""
     cfg = Config("alembic.ini")
     cfg.set_main_option("sqlalchemy.url", _SYNC_URL)
     command.upgrade(cfg, "head")
+    # Initialise the global session factory so auth tests work without ASGI lifespan.
+    from app.infra.db import init_engine as _init_engine
+    _init_engine(TEST_DATABASE_URL)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def ensure_db_ready(run_migrations: None) -> None:
+    """Ensure migrations + global engine are initialised before any test in the session."""
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -36,7 +53,9 @@ async def engine(run_migrations: None):
     await eng.dispose()
 
 
-@pytest_asyncio.fixture
+# Session-scoped session to avoid event-loop mismatch between the session-scoped
+# engine (and its connection pool) and function-scoped fixtures in pytest-asyncio 0.23.x.
+@pytest_asyncio.fixture(scope="session")
 async def session(engine):  # noqa: ANN001
     """A plain session — NOT RLS-scoped; used for seeding data as superuser."""
     factory = async_sessionmaker(engine, expire_on_commit=False)
@@ -56,7 +75,9 @@ async def clear_user_id(session: AsyncSession) -> None:
     await set_user_id(session, "")
 
 
-@pytest_asyncio.fixture
+# Session-scoped so the two users persist across all tests that need them
+# and there is no event-loop mismatch at teardown.
+@pytest_asyncio.fixture(scope="session")
 async def two_users(session: AsyncSession):
     """Seed two users and their IDs; yield (user_a_id, user_b_id); clean up after."""
     user_a_id = uuid.uuid4()
@@ -73,7 +94,7 @@ async def two_users(session: AsyncSession):
     await session.commit()
     yield user_a_id, user_b_id
     await session.execute(
-        text("DELETE FROM users WHERE id IN (:a_id, :b_id)"),
+        text("DELETE FROM users WHERE id = :a_id OR id = :b_id"),
         {"a_id": user_a_id, "b_id": user_b_id},
     )
     await session.commit()

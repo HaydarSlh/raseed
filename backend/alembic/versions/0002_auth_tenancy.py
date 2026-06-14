@@ -38,9 +38,6 @@ def upgrade() -> None:
         END $$
     """)
 
-    # ── Enums ───────────────────────────────────────────────────────────────────
-    op.execute("CREATE TYPE provenance_type AS ENUM ('rule', 'model', 'llm', 'human')")
-    op.execute("CREATE TYPE model_status_type AS ENUM ('challenger', 'champion', 'archived')")
 
     # ── users ────────────────────────────────────────────────────────────────────
     # fastapi-users schema + is_operator; NO RLS (auth layer manages access — data-model.md)
@@ -63,7 +60,7 @@ def upgrade() -> None:
         "transactions",
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("user_id", sa.UUID(), nullable=False),
-        sa.Column("provenance", sa.Enum("rule", "model", "llm", "human", name="provenance_type", create_type=False), nullable=False),
+        sa.Column("provenance", sa.Enum("rule", "model", "llm", "human", name="provenance_type"), nullable=False),
         sa.Column("confidence", sa.Float(), nullable=True),
         sa.Column("needs_review", sa.Boolean(), nullable=False, server_default=sa.false()),
         sa.Column("amount", sa.Numeric(18, 4), nullable=True),
@@ -115,7 +112,7 @@ def upgrade() -> None:
         sa.Column("name", sa.String(256), nullable=False),
         sa.Column("version", sa.String(64), nullable=False),
         sa.Column("sha256", sa.Text(), nullable=False),
-        sa.Column("status", sa.Enum("challenger", "champion", "archived", name="model_status_type", create_type=False), nullable=False, server_default="challenger"),
+        sa.Column("status", sa.Enum("challenger", "champion", "archived", name="model_status_type"), nullable=False, server_default="challenger"),
         sa.Column("model_card", JSONB(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.PrimaryKeyConstraint("id", name="pk_model_registry"),
@@ -154,10 +151,12 @@ def upgrade() -> None:
     for table in _USER_TABLES:
         op.execute(f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY")
         op.execute(f"ALTER TABLE {table} FORCE ROW LEVEL SECURITY")
+        # NULLIF converts '' to NULL so an unset context matches no rows (fail-closed,
+        # no uuid-cast error when app.user_id is the empty reset value).
         op.execute(f"""
             CREATE POLICY {table}_isolation ON {table}
-            USING      (user_id = current_setting('app.user_id', true)::uuid)
-            WITH CHECK (user_id = current_setting('app.user_id', true)::uuid)
+            USING      (user_id = NULLIF(current_setting('app.user_id', true), '')::uuid)
+            WITH CHECK (user_id = NULLIF(current_setting('app.user_id', true), '')::uuid)
         """)
 
     # ── Grants ───────────────────────────────────────────────────────────────────

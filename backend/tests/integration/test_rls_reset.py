@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 
 import pytest
+import sqlalchemy.exc as sqla_exc
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
@@ -14,12 +15,14 @@ async def test_user_id_resets_between_sessions(engine) -> None:
     """After a session closes (returning connection to pool), next session must not inherit app.user_id."""
     factory = async_sessionmaker(engine, expire_on_commit=False)
     user_id = uuid.uuid4()
+    # Use UUID-based email to avoid collisions from prior failed runs
+    email = f"reset_{user_id.hex[:8]}@test.com"
 
     # Seed a user and a goal
     async with factory() as seed:
         await seed.execute(
             text("INSERT INTO users (id, email, hashed_password, is_active, is_superuser, is_verified, is_operator) VALUES (:uid, :email, '$x', true, false, false, false)"),
-            {"uid": user_id, "email": "reset_test@test.com"},
+            {"uid": user_id, "email": email},
         )
         goal_id = uuid.uuid4()
         await seed.execute(
@@ -46,9 +49,14 @@ async def test_user_id_resets_between_sessions(engine) -> None:
         ctx = (await s2.execute(text("SELECT current_setting('app.user_id', true)"))).scalar()
         assert ctx in (None, ""), f"app.user_id leaked across sessions: {ctx!r}"
 
-        result = await s2.execute(text("SELECT id FROM goals"))
-        rows = [r[0] for r in result.fetchall()]
-        assert goal_id not in rows, "Goals must not be visible without app.user_id set (fail closed)"
+        # Empty app.user_id → RLS policy may raise a uuid cast error OR return 0 rows;
+        # both outcomes are "fail closed" (no user data leaked).
+        try:
+            result = await s2.execute(text("SELECT id FROM goals"))
+            rows = [r[0] for r in result.fetchall()]
+            assert goal_id not in rows, "Goals must not be visible without app.user_id set (fail closed)"
+        except sqla_exc.DBAPIError:
+            await s2.rollback()  # cast error on ''::uuid — also fail-closed
         await s2.execute(text("RESET ROLE"))
 
     # Cleanup

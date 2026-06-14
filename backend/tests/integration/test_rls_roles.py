@@ -15,14 +15,14 @@ async def test_rls_enabled_on_user_tables(session: AsyncSession) -> None:
     for table in _USER_TABLES:
         row = (
             await session.execute(
-                text("SELECT rowsecurity, forcerowsecurity FROM pg_class WHERE relname = :t"),
+                text("SELECT relrowsecurity, relforcerowsecurity FROM pg_class WHERE relname = :t"),
                 {"t": table},
             )
         ).fetchone()
         assert row is not None, f"Table {table!r} not found in pg_class"
-        rowsecurity, forcerowsecurity = row
-        assert rowsecurity, f"{table}: ENABLE ROW LEVEL SECURITY not set"
-        assert forcerowsecurity, f"{table}: FORCE ROW LEVEL SECURITY not set"
+        relrowsecurity, relforcerowsecurity = row
+        assert relrowsecurity, f"{table}: ENABLE ROW LEVEL SECURITY not set"
+        assert relforcerowsecurity, f"{table}: FORCE ROW LEVEL SECURITY not set"
 
 
 @pytest.mark.asyncio
@@ -60,7 +60,7 @@ async def test_raseed_app_lacks_bypassrls(session: AsyncSession) -> None:
         )
     ).fetchone()
     assert row is not None, "Role raseed_app does not exist"
-    assert row[0] is False, "raseed_app must NOT have BYPASSRLS (constitution Art. II)"
+    assert not row[0], "raseed_app must NOT have BYPASSRLS (constitution Art. II)"
 
 
 @pytest.mark.asyncio
@@ -71,4 +71,4 @@ async def test_raseed_stats_has_bypassrls(session: AsyncSession) -> None:
         )
     ).fetchone()
     assert row is not None, "Role raseed_stats does not exist"
-    assert row[0] is True, "raseed_stats must have BYPASSRLS (FR-007 — cross-user stats reader)"
+    assert row[0], "raseed_stats must have BYPASSRLS (FR-007 — cross-user stats reader)"
