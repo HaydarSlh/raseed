@@ -1,4 +1,4 @@
-"""App lifespan: constructs and tears down expensive shared singletons (DB engine, Redis, MinIO, Vault, LLM adapter, model-server client) per constitution Art. I."""
+"""App lifespan: constructs and tears down expensive shared singletons — engine, session factory, Vault secrets, LLM adapter (constitution Art. I)."""
 
 from __future__ import annotations
 
@@ -15,21 +15,37 @@ if TYPE_CHECKING:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Build shared singletons on startup, release them on shutdown.
-
-    Phase 0 wires the seams without opening real connections — the empty stack
-    boots without any business dependency. Later phases attach the actual clients
-    to `app.state` here (lifespan singletons, never per-request construction)."""
+    """Build shared singletons on startup; release on shutdown."""
     settings = get_settings()
     configure_logging(settings.log_level)
     log = get_logger("lifespan")
     log.info("startup", app_env=settings.app_env)
 
-    # Later phases: app.state.db = create_async_engine(...), redis, minio, vault,
-    # llm_adapter, modelserver_client — all constructed once, here.
+    from app.infra.db import dispose_engine, init_engine
+    from app.infra.llm import build_llm, init_llm
+    from app.infra.vault import load_secrets_into_settings
+
+    # 1. Vault — resolve secrets; fail-fast in non-local envs (Art. V, FR-010)
+    vault_secrets = load_secrets_into_settings()
+    if "jwt_secret" in vault_secrets:
+        # Override the in-process Settings value with the Vault-sourced secret
+        settings.__dict__["jwt_secret"] = vault_secrets["jwt_secret"]
+
+    # 2. DB engine + session factory (pool reset hook wired inside)
+    init_engine(settings.database_url)
+    log.info("db.engine.ready")
+
+    # 3. LLM adapter — FakeLLM when no keys, real adapter otherwise
+    llm = build_llm(
+        gemini_api_key=settings.gemini_api_key,
+        grok_api_key=settings.grok_api_key,
+        use_fake=settings.use_fake_llm,
+    )
+    init_llm(llm)
+    log.info("llm.adapter.ready", provider=type(llm).__name__)
 
     try:
         yield
     finally:
         log.info("shutdown")
-        # Later phases: dispose engine, close redis/minio/vault clients.
+        await dispose_engine()

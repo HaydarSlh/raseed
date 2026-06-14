@@ -15,8 +15,19 @@ config.set_main_option(
     _settings.database_url.replace("+asyncpg", "+psycopg2"),
 )
 
-# Phase 1+ sets target_metadata to the SQLAlchemy Base metadata for autogenerate.
-target_metadata = None
+# Phase 1: domain models imported so Base.metadata is populated for autogenerate.
+from app.domain import (  # noqa: E402, F401
+    audit,
+    correction,
+    goal,
+    memory,
+    model_registry,
+    transaction,
+    user,
+)
+from app.domain.base import Base  # noqa: E402
+
+target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
