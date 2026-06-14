@@ -30,13 +30,19 @@ class Settings(BaseSettings):
     # Vault is the secret source of truth
     vault_addr: str = "http://vault:8200"
     vault_token: str = "raseed_local_dev_token"
+    vault_secret_path: str = "secret/data/raseed"
 
-    # Lean model server (no model loaded in Phase 0)
+    # JWT signing secret — resolved from Vault in non-local envs (Art. V)
+    jwt_secret: str = "local-dev-jwt-secret-change-in-prod"
+    jwt_lifetime_seconds: int = 3600
+
+    # Lean model server
     modelserver_url: str = "http://modelserver:8080"
 
-    # LLM adapter: Gemini -> Grok failover (no calls in Phase 0)
+    # LLM adapter: Gemini -> Grok failover (Art. V); blank => FakeLLM in tests/local
     gemini_api_key: str = ""
     grok_api_key: str = ""
+    use_fake_llm: bool = False
 
 
 @lru_cache
