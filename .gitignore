@@ -30,7 +30,20 @@ logs/
 *.log
 
 # ── Training data & notebook noise ────────────────
-training/data/
+# Raw dataset is developer-provided and never committed (size/licensing).
+# COMMITTED (CI gate inputs): holdout.parquet, split_manifest.json, baseline.onnx.
+# Everything else under training/data/ is regenerable (prepare_dataset.py /
+# train_baseline.py) and stays out of the repo.
+training/data/raw/
+training/data/train.parquet
+training/data/val.parquet
+training/data/test.parquet
+training/data/baseline_holdout_preds.parquet
+training/data/champion_holdout_preds.parquet
+training/data/baseline_results.json
+training/data/operating_thresholds.json
+training/data/champion.onnx
+training/data/champion_tokenizer.json
 .ipynb_checkpoints/
 
 # ── OS & editor junk ──────────────────────────────

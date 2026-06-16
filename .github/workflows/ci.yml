@@ -73,24 +73,52 @@ jobs:
         run: pytest tests/integration -q
 
   modelserver:
-    name: modelserver lint + type-check
+    name: modelserver lint + type-check + unit tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install modelserver (with dev tools)
-        working-directory: modelserver
+      # The model-server is a `modelserver.*` package (modelserver/logging.py shadows
+      # stdlib `logging`, which forces package-qualified imports). It must therefore be
+      # imported/checked from the repo root, not from inside modelserver/. We install
+      # the declared deps directly (the package itself needs no build — repo root is on
+      # sys.path) so the lean serving deps stay the single source of truth.
+      - name: Install modelserver deps (+ dev tools)
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install fastapi "uvicorn[standard]" onnxruntime "numpy<2" tokenizers \
+                      structlog pydantic-settings pyyaml \
+                      ruff mypy pytest pytest-asyncio httpx onnx
       - name: Ruff (lint)
-        working-directory: modelserver
-        run: ruff check .
+        run: ruff check modelserver
       - name: Mypy (type-check)
-        working-directory: modelserver
-        run: mypy .
+        run: mypy -p modelserver --config-file modelserver/pyproject.toml
+      - name: Pytest unit tests
+        run: pytest modelserver/tests -q
+
+  # Gate 1 — Categorizer quality gate (Phase 2).
+  # Loads champion + baseline from Git LFS, evaluates on the frozen holdout.
+  # Blocks merge if champion does not beat baseline by margin or clear the floor.
+  # NEVER starts the compose stack — stack-independent (constitution Art. V).
+  categorizer-gate:
+    name: categorizer gate (champion vs baseline on frozen holdout)
+    runs-on: ubuntu-latest
+    needs: [modelserver]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install gate deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install onnxruntime numpy pandas pyarrow scikit-learn pyyaml tokenizers
+      - name: Run categorizer gate
+        run: python training/gate_holdout.py
 
   frontend:
     name: frontend lint + type-check

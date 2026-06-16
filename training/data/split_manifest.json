@@ -1,0 +1,117 @@
+{
+  "seeds": {
+    "split": 42,
+    "shuffle": 7
+  },
+  "cleaning": {
+    "n_raw": 6567,
+    "n_null_category_dropped": 24,
+    "n_after_consolidation": 6124,
+    "n_other_dropped": 358,
+    "save_the_change_total": 1165,
+    "save_the_change_kept": 150,
+    "dropped_raw_categories": [
+      "Account transfer",
+      "Health",
+      "Purchase of uk.eg.org",
+      "Rent",
+      "Safety Deposit Return",
+      "Travel Reimbursement"
+    ],
+    "n_final": 5109
+  },
+  "counts": {
+    "train": {
+      "amazon": 836,
+      "groceries": 345,
+      "bills": 332,
+      "cash": 317,
+      "dine_out": 313,
+      "income": 267,
+      "travel": 172,
+      "savings": 165,
+      "other_shopping": 155,
+      "services": 120,
+      "entertainment": 116,
+      "investment": 106,
+      "insurance": 100,
+      "home_improvement": 87,
+      "hotels": 45,
+      "clothes": 42,
+      "mortgage": 40,
+      "fitness": 18
+    },
+    "val": {
+      "amazon": 120,
+      "groceries": 50,
+      "bills": 48,
+      "dine_out": 45,
+      "cash": 45,
+      "income": 38,
+      "savings": 24,
+      "travel": 24,
+      "other_shopping": 22,
+      "services": 17,
+      "entertainment": 16,
+      "investment": 15,
+      "insurance": 14,
+      "home_improvement": 12,
+      "hotels": 7,
+      "mortgage": 6,
+      "clothes": 6,
+      "fitness": 2
+    },
+    "test": {
+      "amazon": 119,
+      "groceries": 49,
+      "bills": 47,
+      "cash": 46,
+      "dine_out": 45,
+      "income": 38,
+      "travel": 25,
+      "savings": 23,
+      "other_shopping": 22,
+      "entertainment": 17,
+      "services": 17,
+      "investment": 15,
+      "insurance": 14,
+      "home_improvement": 13,
+      "hotels": 6,
+      "mortgage": 6,
+      "clothes": 6,
+      "fitness": 3
+    },
+    "holdout": {
+      "amazon": 120,
+      "groceries": 49,
+      "bills": 47,
+      "cash": 45,
+      "dine_out": 45,
+      "income": 38,
+      "travel": 25,
+      "savings": 24,
+      "other_shopping": 22,
+      "entertainment": 17,
+      "services": 17,
+      "investment": 15,
+      "insurance": 14,
+      "home_improvement": 12,
+      "hotels": 6,
+      "mortgage": 6,
+      "clothes": 6,
+      "fitness": 3
+    }
+  },
+  "hashes": {
+    "train": "87e932b4459d6c5808f791835b6c66a4ad769772b3d2baa08251c3500b1ea34e",
+    "val": "6fd7c6fcb1bf3fe21b6cb9e438eae9cbd108a975b1f82e3f8e745860123661d7",
+    "test": "5f961065cf188ac7d6022169d7c6790a7e3415ee96114eeae6e0798a2753d7bb",
+    "holdout": "2db51323838d0dbe39b960b92cfdb6cb1f3a2e5a4477f3336fa15f3c9af8b79d"
+  },
+  "taxonomy_version": "2.0.0",
+  "source_dataset": {
+    "name": "laramee26openBankTransactionData.xlsx",
+    "source_hash": "716eaf9ad4a3cf60dc9c9c8a20ed9a917c545a1b5f139f40ed91d2104faa3ff7",
+    "scope": "UK / GBP open banking transactions"
+  }
+}

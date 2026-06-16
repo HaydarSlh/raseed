@@ -5,10 +5,43 @@
 # numeric gates below are inert placeholders until their phase lands.
 
 # Gate 1 — categorizer (Phase 2)
+# Values are null until the developer runs Colab (T027) and export (T028–T031).
+# macro_f1_min is the ratcheting absolute floor: seeded from champion holdout
+# macro-F1 minus a committed tolerance; can only ratchet UP, never down.
+# beat_baseline_margin is always binding: champion must exceed classical baseline
+# macro-F1 by at least this margin on every gate run.
+# max_inference_latency_ms is a SINGLE-CALL bound (see T022/T033 for p95 benchmark).
 categorizer:
-  macro_f1_min: null          # must beat the committed baseline on the frozen holdout
-  min_per_class_f1: null
-  max_inference_latency_ms: null
+  # Champion: TF-IDF+LR baseline on the cleaned laramee open-bank dataset (v2.0.0
+  # taxonomy, 18 classes). Holdout macro-F1: 0.8934, val macro-F1: 0.8361.
+  # Floor = holdout 0.8934 - 0.05 tolerance = 0.84. Beat-baseline margin = 0 because
+  # the baseline IS the champion this phase (no DistilBERT run yet). See DECISIONS.md.
+  macro_f1_min: 0.84            # ratcheting floor: holdout 0.8934 - 0.05 tolerance
+  beat_baseline_margin: 0.0     # baseline is champion; margin is self-referential here
+  min_per_class_f1: 0.0         # thin classes (fitness/clothes/...) governed by
+                                # always_review, NOT a per-class F1 floor (see DECISIONS)
+  max_inference_latency_ms: 100  # single-call measured ~10 ms; 100 ms headroom
+  # Per-category operating thresholds: highest cut holding >=97% precision on val set.
+  # "always_review" = fewer than 20 validation samples (N<20 rule) — the thin classes.
+  operating_thresholds:
+    savings: 0.94
+    amazon: 0.95
+    groceries: 0.93
+    bills: 0.87
+    cash: 0.96
+    dine_out: 0.87
+    income: 0.93
+    travel: 0.92
+    other_shopping: 0.93
+    services: always_review
+    entertainment: always_review
+    investment: always_review
+    insurance: always_review
+    home_improvement: always_review
+    hotels: always_review
+    clothes: always_review
+    mortgage: always_review
+    fitness: always_review
 
 # Gate 2 — forecaster (Phase 3)
 forecaster:

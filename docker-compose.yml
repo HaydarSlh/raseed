@@ -91,6 +91,9 @@ services:
   modelserver:
     build: ./modelserver
     env_file: .env
+    volumes:
+      - ./training/taxonomy.yaml:/app/training/taxonomy.yaml:ro
+      - ./eval_thresholds.yaml:/app/eval_thresholds.yaml:ro
     ports:
       - "8080:8080"
     healthcheck:

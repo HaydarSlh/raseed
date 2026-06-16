@@ -1,0 +1,16 @@
+# Offline training + gate deps. Installed in CI (gate job) and by the developer locally.
+# torch + transformers are Colab-ONLY (DistilBERT fine-tune notebook) — never in CI
+# or in any serving image (constitution Art. III).
+
+scikit-learn>=1.5
+onnx>=1.16
+skl2onnx>=1.17
+onnxruntime>=1.18
+numpy>=1.26
+pandas>=2.2
+pyarrow>=16.0
+datasets>=2.20
+google-genai>=0.8
+pyyaml>=6.0
+tokenizers>=0.19
+structlog>=24.0
