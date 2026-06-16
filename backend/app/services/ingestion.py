@@ -27,11 +27,11 @@ from app.schemas.ingestion import IngestResult, ParsedRow
 from app.services.rules import apply_rules
 
 # Load per-category thresholds once at module level from the committed YAML.
-# Search upward: container mounts it 2 levels above services/, dev has it 3 levels up.
+# Walk upward from this file until we find the YAML (works in container and dev).
 _here = Path(__file__).parent
 _THRESHOLDS_PATH = next(
-    (p / "eval_thresholds.yaml" for p in [_here.parents[1], _here.parents[2], _here.parents[3]] if (p / "eval_thresholds.yaml").exists()),
-    _here.parents[2] / "eval_thresholds.yaml",
+    (p / "eval_thresholds.yaml" for p in _here.parents if (p / "eval_thresholds.yaml").exists()),
+    _here.parents[1] / "eval_thresholds.yaml",
 )
 
 
