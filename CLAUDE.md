@@ -44,7 +44,7 @@ Each phase ships its tests and ends with CI green and a graphify refresh.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/002-auth-tenancy-foundation/plan.md` (Phase 1 — auth, tenancy & infra spine).
+`specs/003-categorizer-model/plan.md` (Phase 2 — categorizer: trained offline in Colab, served lean via ONNX, gated on a frozen holdout).
 <!-- SPECKIT END -->
 
 ## graphify

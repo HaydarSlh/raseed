@@ -13,7 +13,8 @@ node_modules/
 frontend/dist/
 frontend/.vite/
 graphify-out/
-training/data/
+training/data/raw/
+# holdout.parquet + split_manifest.json are committed via LFS and used by the gate.
 .env
 .env.*
 !.env.example

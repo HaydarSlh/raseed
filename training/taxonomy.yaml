@@ -1,0 +1,86 @@
+# Locked categorizer taxonomy (Phase 2).
+# version: bump this when the category set changes — triggers a mandatory re-train.
+# The model's output label space MUST equal `categories` exactly.
+# consolidation_map: maps every source label to a taxonomy category;
+#   unmapped source labels fall through to `other` deterministically (then filtered).
+#
+# Source dataset: laramee26openBankTransactionData.xlsx (UK / GBP-scoped open
+# banking transactions). The taxonomy below is the CLEANED, LOCKED set derived
+# from that dataset's native "Category" column — see docs/DECISIONS.md (2026-06-16)
+# for every drop/merge/down-sample decision.
+
+version: "2.0.0"
+
+categories:
+  - savings        # SAVE THE CHANGE down-sampled (see DECISIONS) so it doesn't dominate
+  - amazon         # dataset quirk: Amazon is its own native category (recorded in model card)
+  - groceries
+  - bills
+  - cash
+  - dine_out
+  - income         # Paycheck + Supplementary Income (earned inflows)
+  - travel
+  - other_shopping
+  - services
+  - entertainment
+  - investment     # Investment + Interest (returns on capital)
+  - insurance
+  - home_improvement  # Home Improvement + Services/Home Improvement
+  - hotels         # thin class (~64) — likely always_review under the N<20 rule
+  - clothes        # thin class (~60) — likely always_review
+  - mortgage
+  - fitness        # thin class (~26) — likely always_review
+
+# NOTE: `other` is intentionally NOT a model label. It is a filter sentinel: the
+# consolidation map sends "Others" + every unmapped/singleton source value to `other`,
+# and prepare_dataset.py drops those rows before training. The model's output label
+# space is exactly the categories listed above.
+
+# Source "Category" values (whitespace-stripped) → taxonomy category.
+# Any key not listed here maps to `other` in prepare_dataset.py (then dropped),
+# which is also how the singleton categories below get dropped:
+#   Rent, Health, Account transfer, Purchase of uk.eg.org,
+#   Safety Deposit Return, Travel Reimbursement  → (unmapped) → other → dropped.
+consolidation_map:
+  "Savings":                    savings
+
+  "Amazon":                     amazon
+
+  "Groceries":                  groceries
+  "Food Shopping":              groceries
+
+  "Bills":                      bills
+
+  "Cash":                       cash
+
+  "Dine Out":                   dine_out
+
+  "Paycheck":                   income
+  "Supplementary Income":       income
+
+  "Travel":                     travel
+
+  "Other Shopping":             other_shopping
+
+  "Services":                   services
+
+  "Entertainment":              entertainment
+
+  "Investment":                 investment
+  "Interest":                   investment
+
+  "Insurance":                  insurance
+
+  "Home Improvement":           home_improvement
+  "Services/Home Improvement":  home_improvement
+
+  "Hotels":                     hotels
+
+  "Clothes":                    clothes
+
+  "Mortgage":                   mortgage
+
+  "Fitness":                    fitness
+
+  # Catch-all → other (filtered out before training)
+  "Others":                     other
