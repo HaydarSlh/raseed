@@ -30,7 +30,7 @@ class TransactionsRepository(UserScopedRepository[Transaction]):
         stmt = (
             pg_insert(Transaction)
             .values(rows)
-            .on_conflict_do_nothing(constraint="uq_transactions_dedup")
+            .on_conflict_do_nothing(index_elements=["user_id", "occurred_at", "amount", "normalized_description"])
             .returning(Transaction.id)
         )
         result = await self._session.execute(stmt)
