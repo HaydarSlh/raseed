@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import uuid
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 
 from app.domain.analytics import Anomaly, AnomalyType, Cadence, Forecast, Subscription
@@ -203,7 +203,7 @@ def compute_forecast(
     if earliest is None:
         return _cold_start_forecast(user_id, {}, current_balance)
 
-    history_days = (datetime.utcnow() - earliest).days
+    history_days = (datetime.now(timezone.utc) - earliest).days
     dow_avg = _day_of_week_baseline(transactions)
 
     if history_days < _COLD_START_THRESHOLD_DAYS:
