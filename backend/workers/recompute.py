@@ -13,6 +13,7 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
+from app.domain.user import User  # noqa: F401 — registers User table in mapper so FK to users resolves
 from app.infra.db import get_async_sessionmaker, init_engine
 from app.repositories.analytics_repo import (
     AnomalyRepository,
