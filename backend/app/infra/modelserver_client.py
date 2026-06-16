@@ -1,9 +1,10 @@
-"""HTTP client for the lean model-server: batched classify() with timeout + retry
-(constitution Art. I — user numbers come from exact SQL, not RAG; categories are
-the only model output that touches user data)."""
+"""HTTP client for the lean model-server: calls /predict per description (concurrent)
+with timeout + retry (constitution Art. I — categories are the only model output that
+touches user data)."""
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import httpx
@@ -15,11 +16,7 @@ _MAX_RETRIES = 2
 
 
 class ModelServerClient:
-    """Thin async wrapper around the model-server /classify endpoint.
-
-    One instance per request; the caller is responsible for providing a fresh
-    httpx.AsyncClient (or sharing a lifespan-scoped one).
-    """
+    """Thin async wrapper around the model-server /predict endpoint."""
 
     def __init__(self, client: httpx.AsyncClient | None = None) -> None:
         self._owned = client is None
@@ -35,28 +32,16 @@ class ModelServerClient:
         if self._owned:
             await self._client.aclose()
 
-    async def classify(self, descriptions: list[str]) -> list[dict[str, Any]]:
-        """Classify a batch of transaction descriptions.
-
-        Returns a list of dicts matching the model-server response schema:
-            {"label": str, "confidence": float, "scores": {label: float, ...}}
-
-        Retries up to _MAX_RETRIES times on transient errors (5xx / network).
-        Raises httpx.HTTPStatusError on persistent failures so the caller can
-        decide whether to quarantine or surface the error.
-        """
-        if not descriptions:
-            return []
-
-        payload = {"inputs": descriptions}
+    async def _predict_one(self, description: str) -> dict[str, Any]:
+        """Call /predict for a single description with retry. Returns {"label", "confidence"}."""
         last_exc: Exception | None = None
-
         for attempt in range(_MAX_RETRIES + 1):
             try:
-                response = await self._client.post("/classify", json=payload)
+                response = await self._client.post("/predict", json={"description": description})
                 response.raise_for_status()
                 data = response.json()
-                return data["results"]
+                # /predict returns {category, confidence, alternatives, low_confidence}
+                return {"label": data["category"], "confidence": float(data["confidence"])}
             except (httpx.TransportError, httpx.TimeoutException) as exc:
                 last_exc = exc
                 if attempt == _MAX_RETRIES:
@@ -65,8 +50,16 @@ class ModelServerClient:
                 if exc.response.status_code < 500 or attempt == _MAX_RETRIES:
                     raise
                 last_exc = exc
+        raise RuntimeError("_predict_one() exhausted retries") from last_exc
 
-        raise RuntimeError("classify() exhausted retries") from last_exc
+    async def classify(self, descriptions: list[str]) -> list[dict[str, Any]]:
+        """Classify a batch of descriptions concurrently via /predict.
+
+        Returns list of {"label": str, "confidence": float} in input order.
+        """
+        if not descriptions:
+            return []
+        return list(await asyncio.gather(*[self._predict_one(d) for d in descriptions]))
 
     async def healthz(self) -> dict[str, Any]:
         response = await self._client.get("/healthz")
