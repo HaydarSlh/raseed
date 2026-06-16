@@ -44,7 +44,7 @@ Each phase ships its tests and ends with CI green and a graphify refresh.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/003-categorizer-model/plan.md` (Phase 2 — categorizer: trained offline in Colab, served lean via ONNX, gated on a frozen holdout).
+`specs/004-ingestion-analytics/plan.md` (Phase 3 — ingestion & analytics: one shared ingestion service, per-user forecaster + anomaly/recurring detectors, privileged population-stats job, dashboard).
 <!-- SPECKIT END -->
 
 ## graphify

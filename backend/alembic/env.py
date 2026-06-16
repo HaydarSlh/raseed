@@ -17,6 +17,7 @@ config.set_main_option(
 
 # Phase 1: domain models imported so Base.metadata is populated for autogenerate.
 from app.domain import (  # noqa: E402, F401
+    analytics,
     audit,
     correction,
     goal,

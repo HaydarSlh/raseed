@@ -22,6 +22,11 @@ dependencies = [
     "fastapi-users[sqlalchemy]>=13.0",
     "hvac>=2.1",
     "google-genai>=0.8",
+    "prophet>=1.1",
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "pyyaml>=6.0",
+    "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
@@ -39,7 +44,7 @@ src = ["."]
 select = ["E", "F", "I", "UP", "B"]
 # E501 disabled: single-line file-responsibility headers are mandated (FR-002) and
 # intentionally long; line length is a formatter concern, not correctness.
-ignore = ["E501"]
+ignore = ["E501", "B008"]  # B008: FastAPI Depends() in arg defaults is the intended pattern
 
 [tool.mypy]
 python_version = "3.12"

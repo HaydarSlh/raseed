@@ -6,8 +6,10 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.api import analytics as analytics_router
 from app.api import auth as auth_router
 from app.api import health
+from app.api import ingestion as ingestion_router
 from app.core.exceptions import RaseedError
 from app.core.lifespan import lifespan
 from app.core.request_context import RequestIdMiddleware
@@ -45,6 +47,8 @@ def create_app() -> FastAPI:
     # Routers
     app.include_router(health.router)
     app.include_router(auth_router.router)
+    app.include_router(ingestion_router.router)
+    app.include_router(analytics_router.router)
 
     return app
 
