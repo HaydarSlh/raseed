@@ -12,7 +12,8 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.infra.db import get_async_sessionmaker
+from app.core.config import get_settings
+from app.infra.db import get_async_sessionmaker, init_engine
 from app.repositories.analytics_repo import (
     AnomalyRepository,
     ForecastRepository,
@@ -27,10 +28,15 @@ from app.services.analytics import (
 
 
 async def _run_async(user_id: uuid.UUID) -> None:
-    session_factory = get_async_sessionmaker()
-    async with session_factory() as session:
-        async with session.begin():
-            await _recompute(session, user_id)
+    settings = get_settings()
+    engine = init_engine(settings.database_url)
+    try:
+        session_factory = get_async_sessionmaker()
+        async with session_factory() as session:
+            async with session.begin():
+                await _recompute(session, user_id)
+    finally:
+        await engine.dispose()
 
 
 async def _recompute(session: AsyncSession, user_id: uuid.UUID) -> None:
