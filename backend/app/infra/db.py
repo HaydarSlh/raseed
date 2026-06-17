@@ -50,6 +50,26 @@ async def get_async_session() -> AsyncIterator[AsyncSession]:
         yield session
 
 
+def get_async_sessionmaker() -> async_sessionmaker[AsyncSession]:
+    """Alias used by workers that need the session factory outside a FastAPI request."""
+    return get_session_factory()
+
+
+def create_engine_for_role(role: str) -> AsyncEngine:
+    """Create a short-lived engine authenticated as a specific DB role.
+
+    Used only by the privileged stats job (raseed_stats BYPASSRLS). The role
+    suffix is appended to the base DB URL via the `options` connect-arg so it
+    doesn't need a separate connection string in settings (constitution Art. V).
+    """
+    from app.core.config import get_settings
+
+    settings = get_settings()
+    # Replace the DB user in the URL with the requested role.
+    url = settings.database_url.replace("raseed:", f"{role}:", 1)
+    return create_async_engine(url, pool_pre_ping=True, pool_size=2, max_overflow=0)
+
+
 async def dispose_engine() -> None:
     if _engine is not None:
         await _engine.dispose()

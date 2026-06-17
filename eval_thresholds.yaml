@@ -45,8 +45,10 @@ categorizer:
 
 # Gate 2 — forecaster (Phase 3)
 forecaster:
-  mae_max: null               # must beat the day-of-week baseline on the golden fixture
-  mape_max: null
+  # Gate: forecaster MAE must be <= day-of-week baseline MAE on the committed golden fixture.
+  # Measured by backend/tests/test_forecaster_gate.py; see R9 in research.md.
+  beat_baseline: true         # CI gate passes when forecaster_mae <= baseline_mae
+  mae_max: null               # absolute MAE cap deferred (relative gate is binding)
 
 # Gate 3 — tool selection (Phase 4)
 router:

@@ -71,6 +71,8 @@ services:
   backend:
     build: ./backend
     env_file: .env
+    volumes:
+      - ./eval_thresholds.yaml:/app/eval_thresholds.yaml:ro
     ports:
       - "8000:8000"
     depends_on:
@@ -106,6 +108,8 @@ services:
     build: ./backend
     command: ["python", "-m", "app.workers.worker"]
     env_file: .env
+    volumes:
+      - ./eval_thresholds.yaml:/app/eval_thresholds.yaml:ro
     depends_on:
       redis:
         condition: service_healthy

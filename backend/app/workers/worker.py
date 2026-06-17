@@ -19,7 +19,11 @@ def main() -> None:
     log.info("worker_boot", redis_url=settings.redis_url)
 
     connection = Redis.from_url(settings.redis_url)
-    worker = Worker([Queue("default", connection=connection)], connection=connection)
+    queues = [
+        Queue("default", connection=connection),
+        Queue("stats", connection=connection),
+    ]
+    worker = Worker(queues, connection=connection)
     worker.work(with_scheduler=False)
 
 

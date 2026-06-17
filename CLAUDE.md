@@ -44,7 +44,7 @@ Each phase ships its tests and ends with CI green and a graphify refresh.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/003-categorizer-model/plan.md` (Phase 2 — categorizer: trained offline in Colab, served lean via ONNX, gated on a frozen holdout).
+`specs/005-dashboard-ui/plan.md` (Phase 3b — dashboard UI: React SPA pages consuming the Phase 3 APIs — protected Upload + Dashboard routes, forecast chart, anomalies/subscriptions panels, read-only category badges; category correction deferred to Phase 5).
 <!-- SPECKIT END -->
 
 ## graphify

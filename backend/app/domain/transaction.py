@@ -32,4 +32,10 @@ class Transaction(Base):
     merchant: Mapped[str | None] = mapped_column(String(512), nullable=True)
     occurred_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     category: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    # Phase 3 ingestion: the (PAN/IBAN-scrubbed) statement description, a normalized
+    # form used in the dedup natural key, and a denormalized anomaly flag set by the
+    # recompute worker (detail lives in the anomalies table).
+    description: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    normalized_description: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    is_anomaly: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
