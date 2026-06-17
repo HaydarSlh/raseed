@@ -33,6 +33,11 @@ jobs:
           APP_ENV: local
           USE_FAKE_LLM: "true"
         run: pytest tests/unit -q
+      - name: Gate 2 — forecaster MAE beats day-of-week baseline
+        working-directory: backend
+        env:
+          APP_ENV: local
+        run: pytest tests/test_forecaster_gate.py -q
       - name: Gate 3 — tool-selection golden set
         working-directory: backend
         env:
@@ -185,3 +190,30 @@ jobs:
       - name: Test
         working-directory: frontend
         run: npm run test
+
+  # Gate 8 — Compose smoke test (Phase 7, FR-010).
+  # Brings up the default docker compose profile; asserts all default services
+  # become healthy and the trainer is absent. Runs only on push to main so that
+  # PRs are not blocked by Docker startup time.
+  # Documented exception to the stack-independent CI rule (DECISIONS.md D17).
+  compose-smoke:
+    name: Gate 8 — compose smoke (all default services healthy)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [backend, integration]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend test deps
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Copy env file
+        run: cp .env.example .env
+      - name: Run Gate 8 compose smoke
+        env:
+          APP_ENV: local
+        run: pytest backend/tests/test_compose_smoke.py -m integration -v --timeout=300

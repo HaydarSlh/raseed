@@ -121,6 +121,11 @@ services:
       - "5173:5173"
     depends_on:
       - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5173 >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
   # Heavy training image — built/run ONLY with: docker compose --profile training up
   trainer:
