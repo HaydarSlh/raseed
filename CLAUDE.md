@@ -44,7 +44,7 @@ Each phase ships its tests and ends with CI green and a graphify refresh.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/004-ingestion-analytics/plan.md` (Phase 3 — ingestion & analytics: one shared ingestion service, per-user forecaster + anomaly/recurring detectors, privileged population-stats job, dashboard).
+`specs/005-dashboard-ui/plan.md` (Phase 3b — dashboard UI: React SPA pages consuming the Phase 3 APIs — protected Upload + Dashboard routes, forecast chart, anomalies/subscriptions panels, read-only category badges; category correction deferred to Phase 5).
 <!-- SPECKIT END -->
 
 ## graphify
