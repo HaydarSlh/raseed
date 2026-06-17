@@ -12,3 +12,4 @@ from app.domain.retrain_run import RetrainRun  # noqa: F401
 from app.domain.transaction import Transaction  # noqa: F401
 from app.domain.user import User  # noqa: F401
 from app.domain.user_settings import UserSettings  # noqa: F401
+from app.domain.erasure_audit import ErasureAudit  # noqa: F401
