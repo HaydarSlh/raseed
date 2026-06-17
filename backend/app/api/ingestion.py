@@ -8,6 +8,7 @@ no business logic (constitution Art. I layering).
 from __future__ import annotations
 
 import uuid
+from collections.abc import AsyncGenerator
 from datetime import datetime
 from decimal import Decimal
 
@@ -34,7 +35,7 @@ _MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 
 async def _rls_session(
     user: User = Depends(current_active_user),
-) -> AsyncSession:  # type: ignore[misc]
+) -> AsyncGenerator[AsyncSession, None]:
     """Yield an AsyncSession with app.user_id set (RLS armed)."""
     factory = get_session_factory()
     async with factory() as session:
@@ -99,7 +100,7 @@ async def upload_statement(
 
 class ManualTransactionRequest(BaseModel):
     txn_date: datetime
-    amount: Decimal = Field(..., ne=Decimal("0"))
+    amount: Decimal
     description: str = Field(..., min_length=1, max_length=1024)
     merchant: str | None = None
     currency: str = "GBP"

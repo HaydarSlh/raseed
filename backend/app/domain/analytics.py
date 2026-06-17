@@ -9,7 +9,18 @@ import enum
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import UUID, Boolean, Date, DateTime, Enum, ForeignKey, Numeric, SmallInteger, String, func
+from sqlalchemy import (
+    UUID,
+    Boolean,
+    Date,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Numeric,
+    SmallInteger,
+    String,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.domain.base import Base

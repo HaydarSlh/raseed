@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Upload from './pages/Upload';
 import Dashboard from './pages/Dashboard';
+import Chat from './pages/Chat';
 
 export default function App(): JSX.Element {
   return (
@@ -24,6 +25,14 @@ export default function App(): JSX.Element {
         element={
           <RequireAuth>
             <Dashboard />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/chat"
+        element={
+          <RequireAuth>
+            <Chat />
           </RequireAuth>
         }
       />

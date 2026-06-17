@@ -1,0 +1,69 @@
+# Gate 3: Tool-selection golden set (~15 cases)
+# Format: message, expected_route (deterministic|agent), expected_tool (if agent)
+# Used by test_tool_selection_gate.py to verify selection accuracy >= threshold.
+
+cases:
+  # ── Deterministic (enumerable) ──────────────────────────────────────────────
+  - message: "What's my current balance?"
+    expected_route: deterministic
+    expected_tool: null
+
+  - message: "How much money do I have?"
+    expected_route: deterministic
+    expected_tool: null
+
+  - message: "What are my subscriptions?"
+    expected_route: deterministic
+    expected_tool: null
+
+  - message: "Show me my recurring charges"
+    expected_route: deterministic
+    expected_tool: null
+
+  - message: "How much did I spend on groceries last month?"
+    expected_route: deterministic
+    expected_tool: null
+
+  - message: "Total spending on transport this month"
+    expected_route: deterministic
+    expected_tool: null
+
+  # ── Agent: read tools ────────────────────────────────────────────────────────
+  - message: "Show me my recent dining transactions"
+    expected_route: agent
+    expected_tool: query_transactions
+
+  - message: "What's my spending forecast for the next 30 days?"
+    expected_route: agent
+    expected_tool: get_forecast
+
+  - message: "Are there any unusual charges on my account?"
+    expected_route: agent
+    expected_tool: get_anomalies
+
+  # ── Agent: knowledge tool ────────────────────────────────────────────────────
+  - message: "How big should my emergency fund be?"
+    expected_route: agent
+    expected_tool: search_financial_knowledge
+
+  - message: "What's the difference between APR and APY?"
+    expected_route: agent
+    expected_tool: search_financial_knowledge
+
+  - message: "Should I use the avalanche or snowball method to pay off debt?"
+    expected_route: agent
+    expected_tool: search_financial_knowledge
+
+  # ── Agent: affordability / analysis ─────────────────────────────────────────
+  - message: "Can I afford a £1,200 holiday in August without missing my savings goal?"
+    expected_route: agent
+    expected_tool: affordability_check
+
+  - message: "What would happen to my balance if I cut dining spending by £200/month?"
+    expected_route: agent
+    expected_tool: what_if
+
+  # ── Agent: goals ─────────────────────────────────────────────────────────────
+  - message: "I want to save £5,000 for a car by next June"
+    expected_route: agent
+    expected_tool: set_goal

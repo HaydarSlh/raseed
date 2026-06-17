@@ -64,7 +64,7 @@ class ModelServerClient:
     async def healthz(self) -> dict[str, Any]:
         response = await self._client.get("/healthz")
         response.raise_for_status()
-        return response.json()  # type: ignore[no-any-return]
+        return response.json()
 
 
 def get_modelserver_client() -> ModelServerClient:

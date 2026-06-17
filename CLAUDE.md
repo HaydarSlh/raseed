@@ -44,7 +44,7 @@ Each phase ships its tests and ends with CI green and a graphify refresh.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/005-dashboard-ui/plan.md` (Phase 3b — dashboard UI: React SPA pages consuming the Phase 3 APIs — protected Upload + Dashboard routes, forecast chart, anomalies/subscriptions panels, read-only category badges; category correction deferred to Phase 5).
+`specs/006-agent-rag/plan.md` (Phase 4 — knowledge & the agent: chat UI, deterministic router for enumerable turns, bounded tool-calling agent (≤8 iters/~16k tokens) over a Pydantic-validated RLS-scoped tool allowlist, hybrid RAG over a shared financial-literacy corpus with citations + no-answer gate, goals CRUD, Redis session memory (30-min TTL) + audited durable memory, no-op rails hook points; numbers from exact SQL never RAG).
 <!-- SPECKIT END -->
 
 ## graphify

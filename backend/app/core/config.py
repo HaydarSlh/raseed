@@ -44,6 +44,14 @@ class Settings(BaseSettings):
     grok_api_key: str = ""
     use_fake_llm: bool = False
 
+    # Phase 4 — agent + RAG tunables (embedder reuses gemini_api_key — see DECISIONS.md)
+    embedding_model: str = "models/text-embedding-004"
+    embedding_dim: int = 768
+    agent_max_iterations: int = 8
+    agent_token_budget: int = 16000
+    session_ttl_seconds: int = 1800
+    write_rate_per_min: int = 10
+
 
 @lru_cache
 def get_settings() -> Settings:

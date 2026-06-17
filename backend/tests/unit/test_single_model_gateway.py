@@ -20,8 +20,8 @@ def test_no_direct_model_sdk_calls_outside_adapter() -> None:
     ]
     violations: list[str] = []
     for py_file in app_dir.rglob("*.py"):
-        if py_file.name == "llm.py" and py_file.parent.name == "infra":
-            continue  # the adapter itself is allowed
+        if py_file.parent.name == "infra" and py_file.name in ("llm.py", "embeddings.py"):
+            continue  # infra adapters are allowed to use model SDKs
         text = py_file.read_text(encoding="utf-8")
         for pattern in patterns:
             import re
