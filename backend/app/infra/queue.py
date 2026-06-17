@@ -1,6 +1,8 @@
 """RQ queue wiring for the light worker: recompute analytics after a write,
-and the privileged population-stats job. Enqueue helpers live here so the
-service layer never imports rq directly (constitution Art. I layering)."""
+the privileged population-stats job, and the training queue for ML lifecycle jobs.
+
+Enqueue helpers live here so the service layer never imports rq directly
+(constitution Art. I layering)."""
 
 from __future__ import annotations
 
@@ -11,11 +13,13 @@ from rq import Queue
 
 from app.core.config import get_settings
 
-# Two named queues on the same Redis pool:
-#   default — per-user recompute (invalidate-on-write, constitution Art. V)
-#   stats   — cross-user population_stats job (BYPASSRLS role, constitution Art. II)
+# Named queues on the same Redis pool:
+#   default  — per-user recompute (invalidate-on-write, constitution Art. V)
+#   stats    — cross-user population_stats job (BYPASSRLS role, constitution Art. II)
+#   training — ML retrain jobs (trainer container, heavy, off default profile)
 _DEFAULT_QUEUE_NAME = "default"
 _STATS_QUEUE_NAME = "stats"
+_TRAINING_QUEUE_NAME = "training"
 
 _redis_conn: redis.Redis | None = None
 
@@ -34,6 +38,10 @@ def get_recompute_queue() -> Queue:
 
 def get_stats_queue() -> Queue:
     return Queue(_STATS_QUEUE_NAME, connection=_get_redis())
+
+
+def get_training_queue() -> Queue:
+    return Queue(_TRAINING_QUEUE_NAME, connection=_get_redis())
 
 
 def enqueue_recompute(user_id: uuid.UUID) -> None:
@@ -60,4 +68,30 @@ def enqueue_population_stats() -> None:
     queue.enqueue(
         "workers.stats.run",
         job_timeout=600,
+    )
+
+
+def enqueue_retrain(
+    retrain_run_id: uuid.UUID,
+    idempotency_key: str,
+    trigger_reason: str,
+    *,
+    demo_mode: bool = False,
+) -> None:
+    """Enqueue a training job on the RQ `training` queue.
+
+    The trainer worker refuses a duplicate idempotency_key (checked before
+    enqueue in the trigger service; the trainer also guards it).
+    Heavy trainer container consumes the `training` queue only (off-default profile).
+    """
+    queue = get_training_queue()
+    queue.enqueue(
+        "train.run",
+        kwargs={
+            "retrain_run_id": str(retrain_run_id),
+            "idempotency_key": idempotency_key,
+            "trigger_reason": trigger_reason,
+            "demo_mode": demo_mode,
+        },
+        job_timeout=3600,
     )

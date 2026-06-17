@@ -1,4 +1,10 @@
-"""Light-worker bootstrap: connects to Redis and consumes the default RQ queue. Entrypoint for the `worker` compose service (constitution Art. V). Stub in Phase 0."""
+"""Light-worker bootstrap: connects to Redis and consumes default, stats, and training queues.
+
+Entrypoint for the `worker` compose service (constitution Art. V).
+The `training` queue is consumed here so that in-process tests can verify the
+enqueue path; the actual training container consumes it in the `training` compose profile.
+Daily drift monitor runs via RQ-Scheduler.
+"""
 
 from __future__ import annotations
 
@@ -9,10 +15,48 @@ from app.core.config import get_settings
 from app.core.logging import configure_logging, get_logger
 
 
+async def run_drift_check() -> None:
+    """On-demand or scheduled drift evaluation — enqueued via RQ."""
+    from app.infra.db import get_session_factory
+    from app.workers.drift import run_drift_monitor
+
+    factory = get_session_factory()
+    async with factory() as session:
+        await run_drift_monitor(session, source="scheduled")
+
+
+async def run_batch_relabel(user_id: str) -> None:
+    """Batch-relabel flagged rows for a user who switched to auto_relabel mode."""
+    import uuid as _uuid
+
+    from sqlalchemy import select
+
+    from app.domain.transaction import Transaction
+    from app.infra.db import get_session_factory
+    from app.services.review.relabel import RelabelService
+
+    factory = get_session_factory()
+    async with factory() as session:
+        uid = _uuid.UUID(user_id)
+        result = await session.execute(
+            select(Transaction)
+            .where(Transaction.user_id == uid)
+            .where(Transaction.needs_review == True)  # noqa: E712
+        )
+        txns = list(result.scalars().all())
+        svc = RelabelService(session, uid)
+        batch = [
+            (t.id, t.normalized_description or "", t.category or "other")
+            for t in txns
+            if t.normalized_description
+        ]
+        if batch:
+            await svc.relabel_batch(batch)
+            await session.commit()
+
+
 def main() -> None:
-    """Boot the light worker: connect to Redis and block listening on the default
-    queue. Phase 0 registers no jobs, so the worker simply stays alive and idle;
-    Phase 3+ enqueues the stats, drift, and Slack-webhook jobs."""
+    """Boot the light worker listening on default, stats, and training queues."""
     settings = get_settings()
     configure_logging(settings.log_level)
     log = get_logger("worker")
@@ -22,9 +66,10 @@ def main() -> None:
     queues = [
         Queue("default", connection=connection),
         Queue("stats", connection=connection),
+        Queue("training", connection=connection),
     ]
     worker = Worker(queues, connection=connection)
-    worker.work(with_scheduler=False)
+    worker.work(with_scheduler=True)  # enable scheduler for daily drift
 
 
 if __name__ == "__main__":

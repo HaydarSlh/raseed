@@ -37,17 +37,61 @@ class ArtifactRef:
     tokenizer_path: Path
 
 
-def get_current_artifact(artifact_dir: Path) -> ArtifactRef:
-    """Mounted-file provider (Phase 2).
+def get_current_artifact(artifact_dir: Path, sha256: str | None = None) -> ArtifactRef:
+    """Resolve artifact paths.
 
-    Phase 5 replaces this function body with a MinIO-by-SHA provider.
+    Phase 2 (mounted-file): sha256=None → read from artifact_dir.
+    Phase 5 (MinIO-by-SHA): sha256 provided → download from MinIO to a local cache dir
+    and return paths within that cache.
+
     Boot and hash-verification logic in app.py MUST NOT reference artifact_dir
     directly — they call this function instead.
     """
+    if sha256 is not None:
+        return _minio_provider(sha256, cache_dir=artifact_dir.parent / "artifact_cache")
+
     return ArtifactRef(
         onnx_path=artifact_dir / "categorizer.onnx",
         tokenizer_path=artifact_dir / "tokenizer.json",
     )
+
+
+def _minio_provider(sha256: str, cache_dir: Path) -> ArtifactRef:
+    """Download artifact files from MinIO by SHA to a local cache dir.
+
+    The model-server does NOT independently resolve 'current': the backend promote
+    path passes the authoritative SHA via /reload (R3/C2).
+    """
+    import os
+    from minio import Minio
+    from minio.error import S3Error
+
+    cache_path = cache_dir / sha256
+    onnx_path = cache_path / "categorizer.onnx"
+    tokenizer_path = cache_path / "tokenizer.json"
+
+    if onnx_path.exists():
+        log.info("artifact.cache_hit", sha256=sha256)
+        return ArtifactRef(onnx_path=onnx_path, tokenizer_path=tokenizer_path)
+
+    cache_path.mkdir(parents=True, exist_ok=True)
+    minio_endpoint = os.environ.get("MINIO_ENDPOINT", "minio:9000")
+    minio_user = os.environ.get("MINIO_ROOT_USER", "raseed")
+    minio_pass = os.environ.get("MINIO_ROOT_PASSWORD", "raseed_local_dev")
+    bucket = os.environ.get("MINIO_ARTIFACTS_BUCKET", "model-artifacts")
+
+    client = Minio(minio_endpoint, access_key=minio_user, secret_key=minio_pass, secure=False)
+    for filename in ("categorizer.onnx", "tokenizer.json"):
+        key = f"categorizer/{sha256}/{filename}"
+        local = cache_path / filename
+        try:
+            client.fget_object(bucket, key, str(local))
+            log.info("artifact.downloaded", sha256=sha256, key=key)
+        except S3Error as exc:
+            log.error("artifact.download_failed", sha256=sha256, key=key, error=str(exc))
+            raise
+
+    return ArtifactRef(onnx_path=onnx_path, tokenizer_path=tokenizer_path)
 
 
 class Categorizer:

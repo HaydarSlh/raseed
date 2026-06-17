@@ -12,6 +12,7 @@ log = structlog.get_logger(__name__)
 # Secrets this app requires; the Vault key name maps to the settings field name.
 _REQUIRED_SECRETS: dict[str, str] = {
     "jwt_secret": "jwt_secret",
+    "slack_webhook_url": "slack_webhook_url",  # local .env fallback: empty string is tolerated
 }
 
 

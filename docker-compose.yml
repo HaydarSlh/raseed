@@ -126,6 +126,7 @@ services:
   trainer:
     build: ./trainer
     profiles: ["training"]
+    command: ["python", "-m", "rq", "worker", "training", "--url", "${REDIS_URL}"]
     env_file: .env
     depends_on:
       redis:

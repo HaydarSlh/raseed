@@ -19,10 +19,17 @@ import structlog
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+import asyncio
+import threading
+
+from pydantic import BaseModel
+
 from modelserver.categorizer import Categorizer, get_current_artifact
 from modelserver.config import settings
 from modelserver.logging import RequestIDMiddleware, configure_logging
 from modelserver.schemas import PredictRequest, PredictResponse
+
+_reload_lock = threading.Lock()
 
 configure_logging()
 log = structlog.get_logger()
@@ -130,3 +137,71 @@ async def predict(body: PredictRequest) -> PredictResponse:
         description=body.description,
         top_k=body.top_k,
     )
+
+
+class ReloadRequest(BaseModel):
+    sha256: str
+
+
+class ReloadResponse(BaseModel):
+    status: str
+    sha256: str
+
+
+@app.post("/reload", response_model=ReloadResponse)
+async def reload_model(body: ReloadRequest) -> ReloadResponse | JSONResponse:
+    """Hot-reload the model artifact by SHA (Phase 5).
+
+    The caller (backend promote path) supplies the authoritative SHA;
+    the server verifies it and downloads-by-that-SHA, never selecting on its own (R3/C2).
+    Refuses + retains prior model on any failure (Art. III).
+    """
+    loop = asyncio.get_event_loop()
+
+    def _do_reload() -> ReloadResponse | JSONResponse:
+        with _reload_lock:
+            try:
+                # Download artifact from MinIO by SHA
+                artifact_ref = get_current_artifact(settings.artifact_dir, sha256=body.sha256)
+
+                if not artifact_ref.onnx_path.exists():
+                    return JSONResponse(
+                        status_code=409,
+                        content={"detail": f"sha256 mismatch — reload refused, prior model retained"},
+                    )
+
+                # Re-verify SHA
+                computed = _sha256(artifact_ref.onnx_path)
+                if computed != body.sha256:
+                    log.error(
+                        "reload.sha256_mismatch",
+                        expected=body.sha256,
+                        computed=computed,
+                    )
+                    return JSONResponse(
+                        status_code=409,
+                        content={"detail": "sha256 mismatch — reload refused, prior model retained"},
+                    )
+
+                # Load new categorizer
+                new_categorizer = Categorizer(
+                    artifact_ref=artifact_ref,
+                    taxonomy_path=settings.taxonomy_path,
+                    thresholds_path=settings.thresholds_path,
+                    max_sequence_length=settings.max_sequence_length,
+                )
+
+                # Atomic swap
+                app.state.categorizer = new_categorizer
+                app.state.model_sha256 = computed
+                log.info("reload.success", sha256=computed)
+                return ReloadResponse(status="reloaded", sha256=computed)
+
+            except Exception as exc:
+                log.error("reload.failed", sha256=body.sha256, error=str(exc))
+                return JSONResponse(
+                    status_code=409,
+                    content={"detail": f"sha256 mismatch — reload refused, prior model retained"},
+                )
+
+    return await loop.run_in_executor(None, _do_reload)

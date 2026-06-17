@@ -66,6 +66,17 @@ class ModelServerClient:
         response.raise_for_status()
         return response.json()
 
+    async def reload(self, sha256: str) -> dict[str, Any]:
+        """Call POST /reload on the model-server with the authoritative SHA.
+
+        The backend promote path is the single source of truth for the SHA;
+        the server verifies it and downloads-by-SHA, never selecting on its own (R3/C2).
+        Raises httpx.HTTPStatusError on 409 (SHA mismatch) — caller rolls back the registry swap.
+        """
+        response = await self._client.post("/reload", json={"sha256": sha256})
+        response.raise_for_status()
+        return response.json()
+
 
 def get_modelserver_client() -> ModelServerClient:
     """FastAPI dependency: returns a fresh client per request."""

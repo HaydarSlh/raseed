@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
+import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import UUID, Boolean, DateTime, ForeignKey, String, func
+from sqlalchemy import UUID, Boolean, DateTime, Enum, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.domain.base import Base
+
+
+class CorrectionProvenance(enum.StrEnum):
+    llm = "llm"
+    human = "human"
 
 
 class Correction(Base):
@@ -20,4 +26,12 @@ class Correction(Base):
     old_category: Mapped[str | None] = mapped_column(String(128), nullable=True)
     new_category: Mapped[str] = mapped_column(String(128), nullable=False)
     confirmed_by_human: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    # Phase 5: quarantine semantics for LLM relabels
+    provenance: Mapped[CorrectionProvenance] = mapped_column(
+        Enum(CorrectionProvenance, name="correction_provenance_type"),
+        nullable=False,
+        default=CorrectionProvenance.human,
+    )
+    quarantined: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)

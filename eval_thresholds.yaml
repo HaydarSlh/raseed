@@ -72,9 +72,17 @@ redteam:
 redaction:
   pii_leak_count_max: 0
 
-# Gate 7 — drift fire (Phase 5, training profile on)
+# Gate 7 — drift fire (Phase 5, stack-independent: committed fixture + fake queue/transport)
+# The simulation loads drift_skewed_batch.parquet (held-out-merchant batch) and asserts
+# a primary signal (mean confidence below threshold) fires, an alert is sent, and a
+# retrain is enqueued. See R5 in research.md and DECISIONS.md for reconciliation.
 drift:
-  must_fire_on_simulated_drift: null
+  must_fire_on_simulated_drift: true
+  # Threshold mirrors (T001 / config.py seed defaults — update with simulate_drift.py tuning)
+  mean_confidence_min: 0.70
+  correction_rate_max: 0.20
+  psi_max: 0.20
+  new_merchant_rate_max: 0.15
 
 # Gate 8 — compose smoke (Phase 0 scaffold -> wired later)
 compose_smoke:

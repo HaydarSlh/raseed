@@ -45,6 +45,11 @@ jobs:
           APP_ENV: local
           USE_FAKE_LLM: "true"
         run: pytest tests/test_rag_gate.py -q
+      - name: Gate 7 — drift fires on skewed fixture (stack-independent)
+        working-directory: backend
+        env:
+          APP_ENV: local
+        run: pytest tests/test_drift_gate.py -q
 
   integration:
     name: backend integration tests (RLS + auth)

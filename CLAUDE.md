@@ -44,7 +44,7 @@ Each phase ships its tests and ends with CI green and a graphify refresh.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/006-agent-rag/plan.md` (Phase 4 — knowledge & the agent: chat UI, deterministic router for enumerable turns, bounded tool-calling agent (≤8 iters/~16k tokens) over a Pydantic-validated RLS-scoped tool allowlist, hybrid RAG over a shared financial-literacy corpus with citations + no-answer gate, goals CRUD, Redis session memory (30-min TTL) + audited durable memory, no-op rails hook points; numbers from exact SQL never RAG).
+`specs/007-lifecycle-ops/plan.md` (Phase 5 — the ML lifecycle & ops: review queue + human-confirmed corrections; per-user manual/auto-relabel setting with owning-user-confirmed LLM quarantine; single global idempotent retrain trigger (100 corrections / 14-day cooldown / manual / primary-drift); heavy trainer image (partial-unfreeze CPU retrain → ONNX+card+SHA to MinIO) on the `training` profile/queue; champion/challenger gate on the reused frozen holdout; operator-only HIL promotion + model-server `/reload` by SHA; drift monitor (mean confidence + correction rate → retrain; PSI + new-merchant → alarm only) daily+on-demand; Slack webhook (Vault URL, ops signals only, non-blocking); operator-only ops page; CI gate #7 drift-fire runs stack-independently).
 <!-- SPECKIT END -->
 
 ## graphify
