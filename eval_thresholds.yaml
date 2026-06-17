@@ -51,14 +51,17 @@ forecaster:
   mae_max: null               # absolute MAE cap deferred (relative gate is binding)
 
 # Gate 3 — tool selection (Phase 4)
+# Measured on 15-case golden set with FakeEmbedder (no hosted model); see DECISIONS.md
 router:
-  tool_selection_accuracy_min: null
+  tool_selection_accuracy_min: 0.80  # floor: >= 12/15 cases correct
 
 # Gate 4 — RAG (Phase 4)
+# Measured on 15 triples with FakeEmbedder; see DECISIONS.md
+# FakeEmbedder uses hash-seeded vectors, so hit@5 reflects passage ordering, not semantic match
 rag:
-  hit_at_5_min: null
-  mrr_min: null
-  faithfulness_min: null
+  hit_at_5_min: 0.0   # FakeEmbedder scores: non-semantic; set floor at 0 for CI (update after real embedder run)
+  mrr_min: 0.0         # same — FakeEmbedder gives non-semantic ordering
+  faithfulness_min: 0.0 # same — requires real LLM judge; gated by structure check in CI
 
 # Gate 5 — red-team (Phase 6)
 redteam:

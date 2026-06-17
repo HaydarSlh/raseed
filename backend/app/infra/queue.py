@@ -17,10 +17,10 @@ from app.core.config import get_settings
 _DEFAULT_QUEUE_NAME = "default"
 _STATS_QUEUE_NAME = "stats"
 
-_redis_conn: redis.Redis | None = None  # type: ignore[type-arg]
+_redis_conn: redis.Redis | None = None
 
 
-def _get_redis() -> redis.Redis:  # type: ignore[type-arg]
+def _get_redis() -> redis.Redis:
     global _redis_conn
     if _redis_conn is None:
         settings = get_settings()

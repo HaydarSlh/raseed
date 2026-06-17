@@ -38,7 +38,7 @@ _THRESHOLDS_PATH = next(
 def _load_thresholds() -> dict[str, float | str]:
     try:
         data = yaml.safe_load(_THRESHOLDS_PATH.read_text())
-        return data.get("categorizer", {}).get("operating_thresholds", {})  # type: ignore[return-value]
+        return data.get("categorizer", {}).get("operating_thresholds", {})
     except Exception:
         return {}
 
@@ -54,7 +54,7 @@ def _passes_gate(category: str, confidence: float) -> bool:
     threshold = _THRESHOLDS.get(category, 0.0)
     if threshold == "always_review":
         return False
-    return confidence >= float(threshold)  # type: ignore[arg-type]
+    return confidence >= float(threshold)
 
 
 async def ingest_transactions(

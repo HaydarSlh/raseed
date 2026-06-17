@@ -69,7 +69,7 @@ class PopulationStatRepository:
     (constitution Art. II).  No user_id filter because the table has none.
     """
 
-    def __init__(self, session) -> None:  # type: ignore[type-arg]
+    def __init__(self, session) -> None:  # noqa: ANN001
         self._session = session
 
     async def get_stats(self, category: str) -> list[PopulationStat]:

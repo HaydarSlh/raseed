@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import uuid
 from collections import defaultdict
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 from app.domain.analytics import Anomaly, AnomalyType, Cadence, Forecast, Subscription
@@ -97,7 +97,7 @@ def detect_anomalies(
                                     transaction_id=dup.id,
                                     anomaly_type=AnomalyType.duplicate_charge,
                                     score=None,
-                                    reason=f"Possible duplicate charge: {merchant} £{float(txn.amount):.2f} within {delta} day(s)",
+                                    reason=f"Possible duplicate charge: {merchant} £{float(txn.amount or 0):.2f} within {delta} day(s)",
                                 )
                             )
 
@@ -139,8 +139,10 @@ def detect_subscriptions(user_id: uuid.UUID, transactions: list[Transaction]) ->
         sorted_group = sorted(group, key=lambda t: t.occurred_at or datetime.min)
         deltas = []
         for i in range(1, len(sorted_group)):
-            if sorted_group[i].occurred_at and sorted_group[i - 1].occurred_at:
-                deltas.append(abs((sorted_group[i].occurred_at - sorted_group[i - 1].occurred_at).days))
+            ts_curr = sorted_group[i].occurred_at
+            ts_prev = sorted_group[i - 1].occurred_at
+            if ts_curr and ts_prev:
+                deltas.append(abs((ts_curr - ts_prev).days))
         if not deltas:
             continue
         cadence = _best_cadence(deltas)
@@ -203,7 +205,7 @@ def compute_forecast(
     if earliest is None:
         return _cold_start_forecast(user_id, {}, current_balance)
 
-    history_days = (datetime.now(timezone.utc) - earliest).days
+    history_days = (datetime.now(UTC) - earliest).days
     dow_avg = _day_of_week_baseline(transactions)
 
     if history_days < _COLD_START_THRESHOLD_DAYS:
@@ -249,10 +251,10 @@ def _prophet_forecast(
     current_balance: float,
 ) -> list[Forecast]:
     import pandas as pd
-    from prophet import Prophet  # type: ignore[import-untyped]
+    from prophet import Prophet  # noqa: PLC0415
 
     records = [
-        {"ds": t.occurred_at.date(), "y": float(t.amount)}  # type: ignore[union-attr]
+        {"ds": t.occurred_at.date(), "y": float(t.amount or 0)}
         for t in transactions
         if t.occurred_at and t.amount is not None
     ]

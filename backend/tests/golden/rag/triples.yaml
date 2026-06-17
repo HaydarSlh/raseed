@@ -1,0 +1,79 @@
+# Gate 4: RAG golden triples (~15 question/relevant-passage/answer triples)
+# Format: question, relevant_document (slug), relevant_heading, expected_answer_contains
+# Used by test_rag_gate.py to compute hit@5, MRR, and faithfulness.
+
+triples:
+  - question: "How big should my emergency fund be?"
+    relevant_document: emergency-funds
+    relevant_heading: "How Much Should You Save?"
+    expected_answer_contains: ["3", "6", "months"]
+
+  - question: "Where should I keep my emergency fund?"
+    relevant_document: emergency-funds
+    relevant_heading: "Where to Keep It"
+    expected_answer_contains: ["savings", "liquid"]
+
+  - question: "How do I build an emergency fund from scratch?"
+    relevant_document: emergency-funds
+    relevant_heading: "Building Your Emergency Fund"
+    expected_answer_contains: ["automate", "goal"]
+
+  - question: "What is APR?"
+    relevant_document: apr-vs-apy
+    relevant_heading: "APR — Annual Percentage Rate"
+    expected_answer_contains: ["interest", "rate", "borrowing"]
+
+  - question: "What is APY and how does it differ from APR?"
+    relevant_document: apr-vs-apy
+    relevant_heading: "APY — Annual Percentage Yield"
+    expected_answer_contains: ["compounding", "yield"]
+
+  - question: "What is the 50/30/20 budgeting rule?"
+    relevant_document: budgeting-basics
+    relevant_heading: "The 50/30/20 Rule"
+    expected_answer_contains: ["50", "30", "20", "needs"]
+
+  - question: "How do I track my expenses?"
+    relevant_document: budgeting-basics
+    relevant_heading: "Step 4: Track and Adjust"
+    expected_answer_contains: ["track", "spending", "budget"]
+
+  - question: "What is the avalanche method for paying off debt?"
+    relevant_document: paying-down-debt
+    relevant_heading: "Avalanche Method (Mathematically Optimal)"
+    expected_answer_contains: ["highest", "interest", "rate"]
+
+  - question: "What is the snowball debt repayment strategy?"
+    relevant_document: paying-down-debt
+    relevant_heading: "Snowball Method (Psychologically Effective)"
+    expected_answer_contains: ["smallest", "balance", "motivation"]
+
+  - question: "How do I start saving money?"
+    relevant_document: building-savings
+    relevant_heading: "The Pay-Yourself-First Principle"
+    expected_answer_contains: ["automate", "payday"]
+
+  - question: "What kind of account should I use for short-term savings?"
+    relevant_document: building-savings
+    relevant_heading: "Choosing the Right Account"
+    expected_answer_contains: ["savings", "account"]
+
+  - question: "What affects my credit score?"
+    relevant_document: understanding-credit
+    relevant_heading: "What Goes Into Your Score?"
+    expected_answer_contains: ["payment", "history", "utilisation"]
+
+  - question: "How do I improve my credit score?"
+    relevant_document: understanding-credit
+    relevant_heading: "How to Improve Your Score"
+    expected_answer_contains: ["payment", "on time"]
+
+  - question: "What is an index fund?"
+    relevant_document: investing-basics
+    relevant_heading: "Common Investment Vehicles"
+    expected_answer_contains: ["index", "diversification"]
+
+  - question: "Why is compounding important for investing?"
+    relevant_document: investing-basics
+    relevant_heading: "Core Concepts"
+    expected_answer_contains: ["compounding", "returns"]

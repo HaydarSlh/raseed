@@ -29,7 +29,22 @@ jobs:
         run: mypy .
       - name: Pytest unit tests
         working-directory: backend
+        env:
+          APP_ENV: local
+          USE_FAKE_LLM: "true"
         run: pytest tests/unit -q
+      - name: Gate 3 — tool-selection golden set
+        working-directory: backend
+        env:
+          APP_ENV: local
+          USE_FAKE_LLM: "true"
+        run: pytest tests/test_tool_selection_gate.py -q
+      - name: Gate 4 — RAG hit@5/MRR/faithfulness
+        working-directory: backend
+        env:
+          APP_ENV: local
+          USE_FAKE_LLM: "true"
+        run: pytest tests/test_rag_gate.py -q
 
   integration:
     name: backend integration tests (RLS + auth)
@@ -70,6 +85,7 @@ jobs:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/raseed_test
           JWT_SECRET: ci-test-jwt-secret
           APP_ENV: local
+          USE_FAKE_LLM: "true"
         run: pytest tests/integration -q
 
   modelserver:

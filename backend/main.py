@@ -10,6 +10,8 @@ from app.api import analytics as analytics_router
 from app.api import auth as auth_router
 from app.api import health
 from app.api import ingestion as ingestion_router
+from app.api.chat import router as chat_router
+from app.api.goals import router as goals_router
 from app.core.exceptions import RaseedError
 from app.core.lifespan import lifespan
 from app.core.request_context import RequestIdMiddleware
@@ -49,6 +51,8 @@ def create_app() -> FastAPI:
     app.include_router(auth_router.router)
     app.include_router(ingestion_router.router)
     app.include_router(analytics_router.router)
+    app.include_router(chat_router)
+    app.include_router(goals_router)
 
     return app
 

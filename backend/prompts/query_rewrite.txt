@@ -1,0 +1,12 @@
+Rewrite the following user question into a concise retrieval query suitable for a financial-literacy knowledge base.
+
+Rules:
+- Output ONLY the rewritten query — no explanation, no preamble.
+- Make the query specific and information-rich: include the core financial concept and any relevant qualifiers.
+- Remove personal context (names, specific amounts, account details) — the knowledge base contains only general guidance.
+- If the question is about the user's personal data (e.g., "what's my balance?"), output: NOT_KNOWLEDGE_QUERY
+- Keep the query to 1–2 sentences maximum.
+
+User question: {question}
+
+Rewritten query:
