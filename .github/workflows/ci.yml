@@ -50,6 +50,30 @@ jobs:
         env:
           APP_ENV: local
         run: pytest tests/test_drift_gate.py -q
+      - name: Gate 5 — red-team probes refused + Gate 6 Part 1 — PII pipeline check (stack-independent)
+        working-directory: backend
+        env:
+          APP_ENV: local
+        run: pytest tests/test_redteam_gate.py -q
+      - name: Gate 6 Part 2 — secret scan (no hardcoded secrets in source)
+        working-directory: backend
+        run: |
+          pip install detect-secrets -q
+          cd ..
+          detect-secrets scan backend/app frontend/src prompts/ --baseline .secrets.baseline --exclude-files ".*\.venv.*|.*node_modules.*|.*__pycache__.*" || true
+          detect-secrets audit .secrets.baseline --report --json | python -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          results = data.get('results', {})
+          if results:
+              print('SECRET SCAN FAILED — potential secrets found:')
+              for path, secrets in results.items():
+                  for s in secrets:
+                      if not s.get('is_verified', False) and not s.get('is_false_positive', True):
+                          print(f'  {path}: {s.get(\"type\", \"unknown\")}')
+              sys.exit(1)
+          print('Secret scan passed — no new secrets detected')
+          "
 
   integration:
     name: backend integration tests (RLS + auth)

@@ -44,3 +44,15 @@ class RateLimitError(RaseedError):
 class UpstreamError(RaseedError):
     status_code = 502
     message = "Upstream dependency failed."
+
+
+class RailRefusal(RaseedError):
+    """Raised by check_input/check_output when a safety rail fires. Carries a plain-language
+    reason (category slug) and a user-facing message safe to stream back to the client."""
+
+    status_code = 200  # streamed in-band, not an HTTP error
+
+    def __init__(self, reason: str, user_facing_message: str) -> None:
+        self.reason = reason
+        self.user_facing_message = user_facing_message
+        super().__init__(f"Rail refusal: {reason}")

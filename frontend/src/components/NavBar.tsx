@@ -36,6 +36,12 @@ export default function NavBar(): JSX.Element {
         >
           Ops
         </Link>
+        <Link
+          to="/account"
+          className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
+        >
+          Account
+        </Link>
         <button
           onClick={handleSignOut}
           className="text-sm font-medium text-gray-500 hover:text-red-600 transition-colors"

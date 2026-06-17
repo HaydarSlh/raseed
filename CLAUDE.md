@@ -44,7 +44,7 @@ Each phase ships its tests and ends with CI green and a graphify refresh.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/007-lifecycle-ops/plan.md` (Phase 5 — the ML lifecycle & ops: review queue + human-confirmed corrections; per-user manual/auto-relabel setting with owning-user-confirmed LLM quarantine; single global idempotent retrain trigger (100 corrections / 14-day cooldown / manual / primary-drift); heavy trainer image (partial-unfreeze CPU retrain → ONNX+card+SHA to MinIO) on the `training` profile/queue; champion/challenger gate on the reused frozen holdout; operator-only HIL promotion + model-server `/reload` by SHA; drift monitor (mean confidence + correction rate → retrain; PSI + new-merchant → alarm only) daily+on-demand; Slack webhook (Vault URL, ops signals only, non-blocking); operator-only ops page; CI gate #7 drift-fire runs stack-independently).
+`specs/008-security-hardening/plan.md` (Phase 6 — security & compliance hardening: in-process safety rails filling Phase-4 stubs (check_input/check_output/redact); PII redaction (card, IBAN, phone, email, API keys); red-team CI Gate #5 (committed probe suite, fake LLM, stack-independent); write-tool rate-limit coverage verification; right-to-erasure endpoint purging all user-scoped stores + Redis + pgvector with operator-only erasure_audit; CI Gate #6 secret-scan via detect-secrets; SECURITY.md).
 <!-- SPECKIT END -->
 
 ## graphify

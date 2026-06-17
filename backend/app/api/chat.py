@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import current_active_user
 from app.core.config import get_settings
+from app.core.exceptions import RailRefusal
 from app.db.session import get_rls_session
 from app.domain.user import User
 from app.infra.llm import get_llm
@@ -31,8 +32,12 @@ async def chat(
     settings = get_settings()
 
     async def _generate():  # noqa: ANN202
-        # 1. Input rails check (no-op this phase)
-        message = await rails.check_input(body.message)
+        # 1. Input rails check
+        try:
+            message = await rails.check_input(body.message)
+        except RailRefusal as e:
+            yield json.dumps({"error": "refusal", "reason": e.reason, "rail": "input"}) + "\n"
+            return
 
         # 2. Load short-term session context
         context = await load_context(body.session_id, ttl=settings.session_ttl_seconds)
@@ -42,7 +47,11 @@ async def chat(
 
         if decision.route == "deterministic":
             answer = rails.redact(decision.answer or "")
-            answer = await rails.check_output(answer)
+            try:
+                answer = await rails.check_output(answer)
+            except RailRefusal as e:
+                yield json.dumps({"error": "refusal", "reason": e.reason, "rail": "output"}) + "\n"
+                return
             yield json.dumps({"delta": answer}) + "\n"
             yield json.dumps(FinalEvent(route="deterministic", citations=[], bounded=False).model_dump()) + "\n"
             await append_turn(body.session_id, "user", message, ttl=settings.session_ttl_seconds)
@@ -60,7 +69,11 @@ async def chat(
         )
 
         answer = rails.redact(result.answer)
-        answer = await rails.check_output(answer)
+        try:
+            answer = await rails.check_output(answer)
+        except RailRefusal as e:
+            yield json.dumps({"error": "refusal", "reason": e.reason, "rail": "output"}) + "\n"
+            return
 
         yield json.dumps({"delta": answer}) + "\n"
         citations = [
