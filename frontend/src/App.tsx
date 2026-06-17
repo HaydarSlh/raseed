@@ -6,6 +6,8 @@ import Register from './pages/Register';
 import Upload from './pages/Upload';
 import Dashboard from './pages/Dashboard';
 import Chat from './pages/Chat';
+import Review from './pages/Review';
+import Ops from './pages/Ops';
 
 export default function App(): JSX.Element {
   return (
@@ -33,6 +35,22 @@ export default function App(): JSX.Element {
         element={
           <RequireAuth>
             <Chat />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/review"
+        element={
+          <RequireAuth>
+            <Review />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/ops"
+        element={
+          <RequireAuth>
+            <Ops />
           </RequireAuth>
         }
       />

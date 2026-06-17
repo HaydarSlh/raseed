@@ -24,6 +24,18 @@ export default function NavBar(): JSX.Element {
         >
           Upload
         </Link>
+        <Link
+          to="/review"
+          className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
+        >
+          Review
+        </Link>
+        <Link
+          to="/ops"
+          className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
+        >
+          Ops
+        </Link>
         <button
           onClick={handleSignOut}
           className="text-sm font-medium text-gray-500 hover:text-red-600 transition-colors"

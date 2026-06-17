@@ -12,6 +12,9 @@ from app.api import health
 from app.api import ingestion as ingestion_router
 from app.api.chat import router as chat_router
 from app.api.goals import router as goals_router
+from app.api.review import router as review_router
+from app.api.settings import router as settings_router
+from app.api.ops import router as ops_router
 from app.core.exceptions import RaseedError
 from app.core.lifespan import lifespan
 from app.core.request_context import RequestIdMiddleware
@@ -53,6 +56,9 @@ def create_app() -> FastAPI:
     app.include_router(analytics_router.router)
     app.include_router(chat_router)
     app.include_router(goals_router)
+    app.include_router(review_router)
+    app.include_router(settings_router)
+    app.include_router(ops_router)
 
     return app
 
