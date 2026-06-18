@@ -45,6 +45,10 @@ def is_retryable(exc: BaseException) -> bool:
         code = int(status)  # type: ignore[arg-type]
     except (TypeError, ValueError):
         return True
+    # 429 (rate limit) is retryable with backoff — it is not a permanent client
+    # error. All other 4xx are client errors and must not be retried.
+    if code == 429:
+        return True
     return not (400 <= code < 500)
 
 

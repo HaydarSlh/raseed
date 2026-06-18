@@ -21,7 +21,6 @@ import random
 import uuid
 from datetime import datetime, timedelta, timezone
 
-from passlib.hash import argon2
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -84,7 +83,20 @@ _CATEGORIES = list({m[2] for m in _MERCHANTS})
 
 
 def _hash_password(plain: str) -> str:
-    return argon2.hash(plain)
+    """Hash with the SAME helper the backend verifies with (argon2id).
+
+    fastapi-users' PasswordHelper (pwdlib) is the source of truth — using it
+    guarantees seeded users can log in. Falls back to passlib's argon2 (same
+    standard format) if fastapi-users isn't installed in the runtime.
+    """
+    try:
+        from fastapi_users.password import PasswordHelper
+
+        return PasswordHelper().hash(plain)
+    except ImportError:
+        from passlib.hash import argon2
+
+        return argon2.hash(plain)
 
 
 def _random_transactions(
@@ -109,7 +121,7 @@ def _random_transactions(
             "amount": amount,
             "currency": "GBP",
             "merchant": merchant,
-            "occurred_at": occurred_at.isoformat(),
+            "occurred_at": occurred_at,
             "category": category,
             "description": description,
             "normalized_description": description.lower().strip(),
@@ -170,7 +182,9 @@ async def seed(engine_url: str) -> None:
                             "VALUES (:id, :user_id, :provenance, :confidence, :needs_review, "
                             ":amount, :currency, :merchant, :occurred_at, :category, "
                             ":description, :normalized_description, :is_anomaly) "
-                            "ON CONFLICT ON CONSTRAINT uq_transactions_dedup DO NOTHING"
+                            # uq_transactions_dedup is a UNIQUE INDEX, not a named
+                            # constraint — infer the conflict target by columns.
+                            "ON CONFLICT (user_id, occurred_at, amount, normalized_description) DO NOTHING"
                         ),
                         tx,
                     )

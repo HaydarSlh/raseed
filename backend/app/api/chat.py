@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import json
 
+import structlog
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import current_active_user
 from app.core.config import get_settings
-from app.core.exceptions import RailRefusal
+from app.core.exceptions import RailRefusal, UpstreamError
 from app.db.session import get_rls_session
 from app.domain.user import User
 from app.infra.llm import get_llm
@@ -19,6 +20,8 @@ from app.services.agent import rails
 from app.services.agent import router as agent_router
 from app.services.agent.loop import run_agent
 from app.services.session_memory import append_turn, load_context
+
+log = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="", tags=["chat"])
 
@@ -60,13 +63,27 @@ async def chat(
 
         # 4. Agent path
         llm = get_llm()
-        result = await run_agent(
-            message,
-            llm=llm,
-            context=context,
-            max_iterations=settings.agent_max_iterations,
-            token_budget=settings.agent_token_budget,
-        )
+        try:
+            result = await run_agent(
+                message,
+                llm=llm,
+                context=context,
+                max_iterations=settings.agent_max_iterations,
+                token_budget=settings.agent_token_budget,
+            )
+        except UpstreamError as e:
+            # LLM provider unavailable (e.g. rate limit / failover exhausted).
+            # Degrade gracefully instead of 500-ing the stream.
+            log.warning("chat.llm_unavailable", error=str(e))
+            yield json.dumps({
+                "delta": "Sorry — the assistant is temporarily unavailable "
+                         "(the language model is rate-limited right now). "
+                         "Please try again in a moment. Your account data and "
+                         "direct questions (balance, spending, subscriptions) "
+                         "still work.",
+            }) + "\n"
+            yield json.dumps(FinalEvent(route="agent", citations=[], bounded=True).model_dump()) + "\n"
+            return
 
         answer = rails.redact(result.answer)
         try:
