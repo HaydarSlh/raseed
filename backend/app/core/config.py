@@ -45,7 +45,9 @@ class Settings(BaseSettings):
     use_fake_llm: bool = False
 
     # Phase 4 — agent + RAG tunables (embedder reuses gemini_api_key — see DECISIONS.md)
-    embedding_model: str = "models/text-embedding-004"
+    # gemini-embedding-001 supports configurable output dims (Matryoshka); we request
+    # embedding_dim to match the pgvector column. text-embedding-004 is retired.
+    embedding_model: str = "models/gemini-embedding-001"
     embedding_dim: int = 768
     agent_max_iterations: int = 8
     agent_token_budget: int = 16000

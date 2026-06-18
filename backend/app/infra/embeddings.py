@@ -61,6 +61,7 @@ class GeminiEmbedder(BaseEmbedder):
 
     async def _call_gemini(self, text: str) -> list[float]:
         import google.genai as genai
+        from google.genai import types
 
         async for attempt in with_retry(max_attempts=3, timeout=15.0):
             with attempt:
@@ -69,9 +70,18 @@ class GeminiEmbedder(BaseEmbedder):
                     response = await client.aio.models.embed_content(
                         model=self._model,
                         contents=text,
+                        # gemini-embedding-001 defaults to 3072 dims; request the
+                        # configured dimension to match the pgvector column width.
+                        config=types.EmbedContentConfig(output_dimensionality=self._dim),
                     )
                     embeddings = response.embeddings or []
                     values: list[float] = list(embeddings[0].values or [])
+                    # Gemini only returns unit-normalized vectors at the full 3072
+                    # dim; for truncated dims we normalize so cosine/IP scores are
+                    # comparable (and consistent with FakeEmbedder).
+                    norm = sum(x * x for x in values) ** 0.5
+                    if norm > 0:
+                        values = [x / norm for x in values]
                     log.debug("embedder.gemini.ok", dim=len(values))
                     return values
         raise RuntimeError("Gemini embedding retries exhausted")  # pragma: no cover
