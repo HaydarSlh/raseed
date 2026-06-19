@@ -22,6 +22,7 @@ If you have no citations (for personal-finance questions answered from data), us
 
 ### Read tools (exact data — never fabricate these numbers)
 - query_transactions: {"category": str?, "start_date": "YYYY-MM-DD"?, "end_date": "YYYY-MM-DD"?, "limit": int?}
+- spending_by_category: {"start_date": "YYYY-MM-DD"?, "end_date": "YYYY-MM-DD"?} — exact spending totals per category, biggest first. Use this for "biggest/top spending category", "where does my money go", category breakdowns. Omit dates to cover ALL the user's transactions (do this by default; the data may not be from the last 30 days).
 - get_forecast: {"horizon_days": int?}
 - get_anomalies: {"limit": int?}
 - get_subscriptions: {}

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -25,8 +25,12 @@ async def test_llm_relabel_is_quarantined(user_id: uuid.UUID) -> None:
     with patch("app.services.review.relabel.CorrectionsRepository") as MockRepo, \
          patch("app.services.review.relabel.get_llm") as mock_get_llm:
 
+        def _capture(c):
+            captured.append(c)
+            return c
+
         mock_repo = AsyncMock()
-        mock_repo.write_correction = AsyncMock(side_effect=lambda c: captured.append(c) or c)
+        mock_repo.write_correction = AsyncMock(side_effect=_capture)
         MockRepo.return_value = mock_repo
 
         mock_llm = AsyncMock()
@@ -61,7 +65,7 @@ async def test_quarantined_row_excluded_from_training(user_id: uuid.UUID) -> Non
         confirmed_by_human=True,
         provenance=CorrectionProvenance.human,
         quarantined=False,
-        confirmed_at=datetime(2026, 6, 10, tzinfo=timezone.utc),
+        confirmed_at=datetime(2026, 6, 10, tzinfo=UTC),
     )
     Correction(
         id=uuid.uuid4(),
@@ -82,7 +86,7 @@ async def test_quarantined_row_excluded_from_training(user_id: uuid.UUID) -> Non
     from app.repositories.corrections_repo import CorrectionsRepository
 
     repo = CorrectionsRepository(mock_session, user_id)
-    count = await repo.count_confirmed_since(datetime(2026, 1, 1, tzinfo=timezone.utc))
+    count = await repo.count_confirmed_since(datetime(2026, 1, 1, tzinfo=UTC))
     assert count == 1
 
 
@@ -109,7 +113,7 @@ async def test_owning_user_confirmation_upgrades_to_human(user_id: uuid.UUID) ->
     from app.repositories.corrections_repo import CorrectionsRepository
 
     repo = CorrectionsRepository(mock_session, user_id)
-    updated = await repo.confirm_correction(correction_id, "groceries", datetime.now(timezone.utc))
+    updated = await repo.confirm_correction(correction_id, "groceries", datetime.now(UTC))
 
     assert updated is not None
     assert updated.provenance == CorrectionProvenance.human

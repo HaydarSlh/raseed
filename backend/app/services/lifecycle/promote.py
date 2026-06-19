@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import PermissionError, UpstreamError
@@ -46,7 +45,7 @@ class PromoteService:
 
         # 2. Registry swap (champion → archived, challenger → champion) — in one flush
         new_champion, archived = await self._registry_repo.promote(
-            model_registry_id, operator_user_id, datetime.now(timezone.utc)
+            model_registry_id, operator_user_id, datetime.now(UTC)
         )
 
         # 3. Model-server /reload with the authoritative SHA from this backend (C2/R3)

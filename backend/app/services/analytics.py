@@ -89,17 +89,16 @@ def detect_anomalies(
                 delta = abs((other.occurred_at - txn.occurred_at).days)
                 if delta <= _DUPLICATE_WINDOW_DAYS:
                     for dup in (txn, other):
-                        if dup.id not in anomalous_ids:
-                            anomalous_ids.add(dup.id)
-                            anomalies.append(
-                                Anomaly(
-                                    user_id=user_id,
-                                    transaction_id=dup.id,
-                                    anomaly_type=AnomalyType.duplicate_charge,
-                                    score=None,
-                                    reason=f"Possible duplicate charge: {merchant} £{float(txn.amount or 0):.2f} within {delta} day(s)",
-                                )
+                        anomalous_ids.add(dup.id)
+                        anomalies.append(
+                            Anomaly(
+                                user_id=user_id,
+                                transaction_id=dup.id,
+                                anomaly_type=AnomalyType.duplicate_charge,
+                                score=None,
+                                reason=f"Possible duplicate charge: {merchant} £{float(txn.amount or 0):.2f} within {delta} day(s)",
                             )
+                        )
 
     return anomalies, anomalous_ids
 
@@ -205,7 +204,10 @@ def compute_forecast(
     if earliest is None:
         return _cold_start_forecast(user_id, {}, current_balance)
 
-    history_days = (datetime.now(UTC) - earliest).days
+    # Handle both tz-aware and tz-naive occurred_at values from different call sites
+    now = datetime.now(UTC)
+    earliest_aware = earliest if earliest.tzinfo is not None else earliest.replace(tzinfo=UTC)
+    history_days = (now - earliest_aware).days
     dow_avg = _day_of_week_baseline(transactions)
 
     if history_days < _COLD_START_THRESHOLD_DAYS:
@@ -261,7 +263,7 @@ def _prophet_forecast(
     df = pd.DataFrame(records).groupby("ds")["y"].sum().reset_index()
     df.columns = ["ds", "y"]
 
-    model = Prophet(daily_seasonality=False, yearly_seasonality=True, weekly_seasonality=True)
+    model = Prophet(growth="flat", daily_seasonality=False, yearly_seasonality=False, weekly_seasonality=True)
     model.fit(df)
 
     future = model.make_future_dataframe(periods=_FORECAST_HORIZON_DAYS)

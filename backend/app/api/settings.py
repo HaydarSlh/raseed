@@ -39,9 +39,9 @@ async def put_review_mode(
 ) -> ReviewModeResponse:
     try:
         mode = ReviewMode(body.review_mode)
-    except ValueError:
+    except ValueError as exc:
         from app.core.exceptions import ValidationError
-        raise ValidationError(f"Invalid review_mode: {body.review_mode!r}")
+        raise ValidationError(f"Invalid review_mode: {body.review_mode!r}") from exc
 
     user_id = uuid.UUID(str(user.id))
     result = await session.execute(select(UserSettings).where(UserSettings.user_id == user_id))

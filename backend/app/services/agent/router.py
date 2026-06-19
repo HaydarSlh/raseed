@@ -26,12 +26,26 @@ _CATEGORY_PATTERNS = [
     re.compile(r"\b(spending|spend|spent|total)(?: on)?\s+([a-z ]{2,40})\b", re.I),
 ]
 
+# "biggest/top spending category", "what do I spend the most on", "where does my money go"
+_TOP_CATEGORY_PATTERNS = [
+    re.compile(r"\b(biggest|top|largest|highest|most|main)\b.{0,30}\bcategor", re.I),
+    re.compile(r"\bcategor(?:y|ies)\b.{0,30}\b(biggest|top|largest|highest|most)\b", re.I),
+    re.compile(r"\bspend.{0,20}\bmost\b", re.I),
+    re.compile(r"\bwhere.{0,25}\b(money|spending)\b.{0,10}\bgo", re.I),
+]
+
+# Words that are never a real category — guards the loose category-total pattern
+_CATEGORY_STOPWORDS = {"category", "categories", "money", "the most", "most"}
+
 
 def _match_category(message: str) -> str | None:
     for pat in _CATEGORY_PATTERNS:
         m = pat.search(message)
         if m:
-            return m.group(2).strip().rstrip("?").strip()
+            candidate = m.group(2).strip().rstrip("?").strip()
+            if candidate.lower() in _CATEGORY_STOPWORDS:
+                return None
+            return candidate
     return None
 
 
@@ -76,6 +90,44 @@ async def route(
             lines = [f"- {s.merchant}: £{float(s.typical_amount):,.2f}/{s.cadence.value}" for s in subs]
             answer = "Your subscriptions:\n" + "\n".join(lines)
         log.info("router.deterministic", intent="subscriptions", user_id=str(user_id))
+        return RouterDecision(route="deterministic", answer=answer)
+
+    # ── Top spending category query ─────────────────────────────────────────────
+    if any(p.search(msg) for p in _TOP_CATEGORY_PATTERNS):
+        from sqlalchemy import func, select
+
+        from app.domain.transaction import Transaction
+
+        # Aggregate spend by category over the last 90 days, excluding income.
+        start = date.today() - timedelta(days=90)
+        result = await session.execute(
+            select(
+                Transaction.category,
+                func.sum(func.abs(Transaction.amount)).label("total"),
+            )
+            .where(
+                Transaction.user_id == user_id,
+                Transaction.category.isnot(None),
+                Transaction.category != "income",
+                Transaction.occurred_at >= start,
+            )
+            .group_by(Transaction.category)
+            .order_by(func.sum(func.abs(Transaction.amount)).desc())
+            .limit(3)
+        )
+        rows = result.all()
+        if not rows:
+            answer = "I don't see any spending in your recent transactions yet."
+        else:
+            top_cat, top_total = rows[0][0], abs(float(rows[0][1] or 0))
+            answer = (
+                f"Your biggest spending category in the last 90 days is "
+                f"**{top_cat}** (£{top_total:,.2f})."
+            )
+            if len(rows) > 1:
+                others = ", ".join(f"{r[0]} (£{abs(float(r[1] or 0)):,.2f})" for r in rows[1:])
+                answer += f" Next: {others}."
+        log.info("router.deterministic", intent="top_category", user_id=str(user_id))
         return RouterDecision(route="deterministic", answer=answer)
 
     # ── Category total query ──────────────────────────────────────────────────

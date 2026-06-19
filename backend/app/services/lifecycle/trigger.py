@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import structlog
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
@@ -46,7 +45,7 @@ class RetrainTriggerService:
         await redis.delete(_COOLDOWN_KEY)
 
     async def _build_idempotency_key(self, reason: TriggerReason) -> str:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         window = now.strftime("%Y-%U")  # ISO year + week
         return f"retrain:{reason.value}:{window}"
 

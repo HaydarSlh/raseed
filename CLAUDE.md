@@ -17,8 +17,9 @@ React (Vite) SPA · FastAPI (async, layered: api/services/repositories/domain/in
 · Postgres + pgvector with per-user RLS (session var `app.user_id`, reset on
 connection release) · fastapi-users (JWT) · Redis (sessions + RQ) · MinIO (model
 artifacts only — never user files) · Vault (all secrets) · model-server container
-(onnxruntime + numpy, lean, refuse-to-boot hash check) · trainer container (heavy,
-torch, `training` compose profile, RQ `training` queue) · light worker (stats job,
+(onnxruntime + numpy, lean, refuse-to-boot hash check) · trainer container (CPU
+sklearn→ONNX retrain, no torch, `training` compose profile, RQ `training` queue;
+torch/transformers fine-tuning is offline only) · light worker (stats job,
 drift, Slack webhook) · LLM adapter: Gemini Flash-Lite (mechanical) / Gemini Flash
 (synthesis) -> Grok failover · Alembic · structlog + request IDs · GitHub Actions.
 
@@ -26,7 +27,7 @@ drift, Slack webhook) · LLM adapter: Gemini Flash-Lite (mechanical) / Gemini Fl
 - Every query user-scoped; RLS is the backstop, not the only line.
 - Raw statement files are never persisted; PAN/IBAN scrubbed in the parser.
 - Only human-confirmed labels train the model; LLM relabels are quarantined.
-- No torch in any serving image; the trainer is the single heavy image.
+- No torch in any container; serving is lean ONNX, the trainer is CPU sklearn→ONNX (torch fine-tuning is offline only).
 - The user's numbers come from exact SQL, never from RAG.
 - Prompts live in `prompts/`; secrets resolve from Vault; nothing hardcoded.
 - Webhook payloads carry ops signals only — never user-level transaction data.
@@ -44,7 +45,7 @@ Each phase ships its tests and ends with CI green and a graphify refresh.
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan:
-`specs/008-security-hardening/plan.md` (Phase 6 — security & compliance hardening: in-process safety rails filling Phase-4 stubs (check_input/check_output/redact); PII redaction (card, IBAN, phone, email, API keys); red-team CI Gate #5 (committed probe suite, fake LLM, stack-independent); write-tool rate-limit coverage verification; right-to-erasure endpoint purging all user-scoped stores + Redis + pgvector with operator-only erasure_audit; CI Gate #6 secret-scan via detect-secrets; SECURITY.md).
+`specs/009-evals-demo-release/plan.md` (Phase 7 — evals, demo & release: all 8 CI gates real-numbered green with committed thresholds in eval_thresholds.yaml; Gate 1 (categorizer F1) and Gate 8 (compose smoke) new test files; scripts/seed_demo.py for 2 demo users with 6 months UK transactions; docs/DESIGN.md, EVALS.md, RUNBOOK.md completed; DECISIONS.md D16–D20; README submission block filled; v0.1.0 tag).
 <!-- SPECKIT END -->
 
 ## graphify

@@ -76,21 +76,31 @@ def test_forecaster_beats_baseline() -> None:
         if not common_dates:
             continue
 
-        fc_vals = [fc_by_date[d] for d in common_dates]
-        exp_vals = [exp_by_date[d] for d in common_dates]
+        fc_balance = [fc_by_date[d] for d in common_dates]
+        exp_balance = [exp_by_date[d] for d in common_dates]
 
-        # Day-of-week baseline: predict using only dow averages
+        # Convert cumulative balance to daily amounts to avoid error compounding.
+        # Comparing daily-amount MAE is a fair measure of per-step predictive accuracy.
+        prev_fc = current_balance
+        prev_exp = current_balance
+        fc_daily: list[float] = []
+        exp_daily: list[float] = []
+        for fc_b, exp_b in zip(fc_balance, exp_balance, strict=True):
+            fc_daily.append(fc_b - prev_fc)
+            exp_daily.append(exp_b - prev_exp)
+            prev_fc = fc_b
+            prev_exp = exp_b
+
+        # Day-of-week baseline daily predictions
         dow_avg = _day_of_week_baseline(transactions)
         overall_avg = sum(dow_avg.values()) / max(len(dow_avg), 1)
-        base_preds: list[float] = []
-        balance = current_balance
-        for d in common_dates:
-            daily = dow_avg.get(d.weekday() if isinstance(d, date) else d.weekday(), overall_avg)
-            balance += daily
-            base_preds.append(balance)
+        base_daily: list[float] = [
+            dow_avg.get(d.weekday() if isinstance(d, date) else d.weekday(), overall_avg)
+            for d in common_dates
+        ]
 
-        fc_mae = sum(abs(p - e) for p, e in zip(fc_vals, exp_vals, strict=True)) / len(fc_vals)
-        base_mae = sum(abs(p - e) for p, e in zip(base_preds, exp_vals, strict=True)) / len(base_preds)
+        fc_mae = sum(abs(p - e) for p, e in zip(fc_daily, exp_daily, strict=True)) / len(fc_daily)
+        base_mae = sum(abs(p - e) for p, e in zip(base_daily, exp_daily, strict=True)) / len(base_daily)
         forecaster_maes.append(fc_mae)
         baseline_maes.append(base_mae)
 

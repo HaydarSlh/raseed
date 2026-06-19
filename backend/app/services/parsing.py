@@ -94,7 +94,7 @@ def parse_statement(file_bytes: bytes, filename: str = "") -> list[ParsedRow]:
             amount = _parse_amount(row[amount_col])
             description = _scrub(str(row[desc_col]).strip())
             merchant = _scrub(str(row[merchant_col]).strip()) if merchant_col else None
-            currency = str(row[currency_col]).strip() if currency_col else "GBP"
+            currency = str(row[currency_col]).strip() if currency_col else "USD"
         except (ValueError, KeyError):
             continue  # skip unparseable rows; caller sees them in needs_review count
 

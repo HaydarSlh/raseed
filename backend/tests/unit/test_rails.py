@@ -7,7 +7,6 @@ import pytest
 from app.core.exceptions import RailRefusal
 from app.services.agent.rails import check_input, check_output, redact
 
-
 # ── Redaction ─────────────────────────────────────────────────────────────────
 
 def test_redact_card_number() -> None:

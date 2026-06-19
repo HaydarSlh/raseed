@@ -9,9 +9,8 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 import structlog
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.repositories.model_registry_repo import ModelRegistryRepository
 from app.repositories.retrain_runs_repo import RetrainRunsRepository

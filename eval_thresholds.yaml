@@ -16,6 +16,9 @@ categorizer:
   # taxonomy, 18 classes). Holdout macro-F1: 0.8934, val macro-F1: 0.8361.
   # Floor = holdout 0.8934 - 0.05 tolerance = 0.84. Beat-baseline margin = 0 because
   # the baseline IS the champion this phase (no DistilBERT run yet). See DECISIONS.md.
+  # Phase 7 measured values (training/gate_holdout.py on frozen holdout):
+  #   last_measured_macro_f1: 0.8934   (champion = TF-IDF+LR; DistilBERT lost: 0.8677)
+  #   last_measured_latency_ms: ~10    (single-call ONNX inference on CPU)
   macro_f1_min: 0.84            # ratcheting floor: holdout 0.8934 - 0.05 tolerance
   beat_baseline_margin: 0.0     # baseline is champion; margin is self-referential here
   min_per_class_f1: 0.0         # thin classes (fitness/clothes/...) governed by
@@ -47,6 +50,8 @@ categorizer:
 forecaster:
   # Gate: forecaster MAE must be <= day-of-week baseline MAE on the committed golden fixture.
   # Measured by backend/tests/test_forecaster_gate.py; see R9 in research.md.
+  # Phase 7 measured: forecaster_mae <= baseline_mae on golden fixture — PASS
+  #   last_measured_result: beat_baseline=true
   beat_baseline: true         # CI gate passes when forecaster_mae <= baseline_mae
   mae_max: null               # absolute MAE cap deferred (relative gate is binding)
 
@@ -84,6 +89,12 @@ drift:
   psi_max: 0.20
   new_merchant_rate_max: 0.15
 
-# Gate 8 — compose smoke (Phase 0 scaffold -> wired later)
+# Gate 8 — compose smoke (Phase 7, FR-010)
+# Documented exception to stack-independent CI rule (constitution Art. V; DECISIONS.md D17).
+# Runs only on push to main (not on PRs) via the compose-smoke CI job.
+# When Docker is unavailable in CI, the pytest test is skipped and this gate is noted
+# as "not verified in this CI run" in docs/EVALS.md.
 compose_smoke:
   all_default_services_healthy: true
+  # last_measured: "PASS on local run — services: postgres, redis, minio, vault, backend,
+  #   modelserver, worker, frontend all healthy; trainer correctly absent on default up"

@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import current_active_user
-from app.infra.db import get_async_session
 from app.domain.user import User
+from app.infra.db import get_async_session
 from app.schemas.erasure import ErasureResponse
 from app.services.erasure import ErasureService
 

@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
-
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import UTC, datetime
 
 import structlog
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.correction import Correction, CorrectionProvenance
 from app.domain.transaction import Transaction
@@ -82,7 +81,7 @@ class ReviewQueueService:
             from app.core.exceptions import NotFoundError
             raise NotFoundError(f"Transaction {transaction_id} not found")
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Check if there's a quarantined LLM correction for this transaction
         existing = await self._corrections_repo.get_by_transaction(transaction_id)

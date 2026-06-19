@@ -20,20 +20,23 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     # ── New enums ─────────────────────────────────────────────────────────────
+    # correction_provenance_type is used via add_column (not create_table), so
+    # it must be pre-created manually — SQLAlchemy's _on_table_create event
+    # only fires for CREATE TABLE, not ALTER TABLE ADD COLUMN.
+    # The other four types are used inside create_table calls; SA 2.0 auto-creates
+    # them when the table is created (create_type defaults to True), so we must NOT
+    # pre-create them here or they get double-created (SA 2.0 ignores create_type=False
+    # in _on_table_create for op.create_table).
     op.execute("CREATE TYPE correction_provenance_type AS ENUM ('llm', 'human')")
-    op.execute("CREATE TYPE trigger_reason_type AS ENUM ('correction_count', 'time_cooldown', 'manual', 'drift')")
-    op.execute("CREATE TYPE run_status_type AS ENUM ('enqueued', 'running', 'completed', 'failed', 'skipped')")
-    op.execute("CREATE TYPE drift_source_type AS ENUM ('scheduled', 'on_demand', 'simulation')")
-    op.execute("CREATE TYPE review_mode_type AS ENUM ('manual', 'auto_relabel')")
 
     # ── retrain_runs (global ops table — no user_id, no RLS) ─────────────────
     # Created BEFORE model_registry extension because model_registry.retrain_run_id FKs here.
     op.create_table(
         "retrain_runs",
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("trigger_reason", sa.Enum("correction_count", "time_cooldown", "manual", "drift", name="trigger_reason_type", create_type=False), nullable=False),
+        sa.Column("trigger_reason", sa.Enum("correction_count", "time_cooldown", "manual", "drift", name="trigger_reason_type"), nullable=False),
         sa.Column("idempotency_key", sa.String(256), nullable=False),
-        sa.Column("status", sa.Enum("enqueued", "running", "completed", "failed", "skipped", name="run_status_type", create_type=False), nullable=False, server_default="enqueued"),
+        sa.Column("status", sa.Enum("enqueued", "running", "completed", "failed", "skipped", name="run_status_type"), nullable=False, server_default="enqueued"),
         sa.Column("skipped_reason", sa.Text(), nullable=True),
         sa.Column("challenger_id", sa.UUID(), nullable=True),
         sa.Column("champion_macro_f1", sa.Float(), nullable=True),
@@ -102,7 +105,7 @@ def upgrade() -> None:
         sa.Column("fired", sa.Boolean(), nullable=False, server_default="false"),
         sa.Column("fired_signals", postgresql.JSONB(), nullable=True),
         sa.Column("triggered_retrain", sa.Boolean(), nullable=False, server_default="false"),
-        sa.Column("source", sa.Enum("scheduled", "on_demand", "simulation", name="drift_source_type", create_type=False), nullable=False, server_default="scheduled"),
+        sa.Column("source", sa.Enum("scheduled", "on_demand", "simulation", name="drift_source_type"), nullable=False, server_default="scheduled"),
         sa.PrimaryKeyConstraint("id", name="pk_drift_signals"),
     )
     op.create_index("ix_drift_signals_evaluated_at", "drift_signals", ["evaluated_at"])
@@ -111,7 +114,7 @@ def upgrade() -> None:
     op.create_table(
         "user_settings",
         sa.Column("user_id", sa.UUID(), sa.ForeignKey("users.id", ondelete="CASCADE", name="fk_user_settings_user_id_users"), nullable=False),
-        sa.Column("review_mode", sa.Enum("manual", "auto_relabel", name="review_mode_type", create_type=False), nullable=False, server_default="manual"),
+        sa.Column("review_mode", sa.Enum("manual", "auto_relabel", name="review_mode_type"), nullable=False, server_default="manual"),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.PrimaryKeyConstraint("user_id", name="pk_user_settings"),
     )

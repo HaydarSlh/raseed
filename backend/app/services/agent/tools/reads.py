@@ -6,7 +6,7 @@ import uuid
 from datetime import date, datetime
 
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.analytics import Anomaly, Forecast, Subscription
@@ -25,6 +25,18 @@ class QueryTransactionsInput(BaseModel):
     start_date: date | None = None
     end_date: date | None = None
     limit: int | None = Field(None, le=100)
+    # Injected by loop wrapper
+    _session: object | None = None
+    _user_id: uuid.UUID | None = None
+
+    model_config = {"arbitrary_types_allowed": True}
+
+
+class SpendingByCategoryInput(BaseModel):
+    # Both optional: default is ALL available data, so a question like "what's my
+    # biggest spending category?" works even when the uploaded statement is old.
+    start_date: date | None = None
+    end_date: date | None = None
     # Injected by loop wrapper
     _session: object | None = None
     _user_id: uuid.UUID | None = None
@@ -68,6 +80,49 @@ async def query_transactions(
     total = sum(float(r.amount or 0) for r in rows)
     items = [{"date": str(r.occurred_at.date()) if r.occurred_at else None, "amount": float(r.amount or 0), "category": r.category} for r in rows]
     return {"count": len(items), "total_amount": total, "items": items}
+
+
+async def spending_by_category(
+    start_date: date | None = None,
+    end_date: date | None = None,
+    _session: AsyncSession | None = None,
+    _user_id: uuid.UUID | None = None,
+) -> dict:
+    """Aggregate spending (debits, amount < 0) grouped by category, biggest first.
+
+    Spending is summed in SQL — never by the LLM — so totals are exact. Defaults to
+    all available transactions when no date range is given.
+    """
+    if _session is None or _user_id is None:
+        return {"error": "Session context not available"}
+
+    spend = func.sum(Transaction.amount)
+    q = (
+        select(Transaction.category, spend, func.count())
+        .where(Transaction.user_id == _user_id, Transaction.amount < 0)
+        .group_by(Transaction.category)
+        .order_by(spend.asc())  # most negative (largest spend) first
+    )
+    if start_date:
+        q = q.where(Transaction.occurred_at >= datetime.combine(start_date, datetime.min.time()))
+    if end_date:
+        q = q.where(Transaction.occurred_at <= datetime.combine(end_date, datetime.max.time()))
+
+    result = await _session.execute(q)
+    rows = result.all()
+    categories = [
+        {
+            "category": cat or "uncategorized",
+            "total_spent": abs(float(total or 0)),
+            "transaction_count": int(count),
+        }
+        for cat, total, count in rows
+    ]
+    return {
+        "categories": categories,
+        "top_category": categories[0]["category"] if categories else None,
+        "total_spent": sum(c["total_spent"] for c in categories),
+    }
 
 
 async def get_forecast(
@@ -128,6 +183,7 @@ async def get_subscriptions(
 
 
 register_tool("query_transactions", QueryTransactionsInput, query_transactions)
+register_tool("spending_by_category", SpendingByCategoryInput, spending_by_category)
 register_tool("get_forecast", GetForecastInput, get_forecast)
 register_tool("get_anomalies", GetAnomaliesInput, get_anomalies)
 register_tool("get_subscriptions", GetSubscriptionsInput, get_subscriptions)

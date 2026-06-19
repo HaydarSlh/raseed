@@ -49,7 +49,7 @@ describe('TransactionTable', () => {
   it('shows date, amount, and category badge', () => {
     render(<TransactionTable transactions={[transactions[0]]} anomalyIds={new Set()} />);
     expect(screen.getByText('2026-06-10')).toBeInTheDocument();
-    expect(screen.getByText('-£12.50')).toBeInTheDocument();
+    expect(screen.getByText('-$12.50')).toBeInTheDocument();
     expect(screen.getByText('groceries')).toBeInTheDocument();
   });
 

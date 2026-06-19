@@ -11,11 +11,11 @@ from app.api import auth as auth_router
 from app.api import health
 from app.api import ingestion as ingestion_router
 from app.api.chat import router as chat_router
+from app.api.erasure import router as erasure_router
 from app.api.goals import router as goals_router
+from app.api.ops import router as ops_router
 from app.api.review import router as review_router
 from app.api.settings import router as settings_router
-from app.api.ops import router as ops_router
-from app.api.erasure import router as erasure_router
 from app.core.exceptions import RaseedError
 from app.core.lifespan import lifespan
 from app.core.request_context import RequestIdMiddleware

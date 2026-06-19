@@ -13,7 +13,7 @@ function formatDate(iso: string | null): string {
 function formatAmount(amount: number | null): string {
   if (amount === null) return '—';
   const abs = Math.abs(amount).toFixed(2);
-  return amount < 0 ? `-£${abs}` : `+£${abs}`;
+  return amount < 0 ? `-$${abs}` : `+$${abs}`;
 }
 
 function ProvenanceChip({ provenance }: { provenance: string }): JSX.Element {

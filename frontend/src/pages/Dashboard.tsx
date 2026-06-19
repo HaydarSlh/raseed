@@ -5,9 +5,44 @@ import ForecastChart from '../components/ForecastChart';
 import AnomaliesPanel from '../components/AnomaliesPanel';
 import SubscriptionsPanel from '../components/SubscriptionsPanel';
 import { dashboardApi } from '../api/client';
-import type { DashboardView } from '../api/types';
+import type { DashboardView, TransactionView } from '../api/types';
 
 type Status = 'loading' | 'error' | 'empty' | 'loaded';
+
+function csvCell(value: string | number | boolean | null): string {
+  if (value === null) return '';
+  const str = String(value);
+  // Quote fields containing commas, quotes, or newlines; escape embedded quotes.
+  return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+}
+
+function downloadTransactionsCsv(transactions: TransactionView[]): void {
+  const header = [
+    'date', 'description', 'amount', 'category',
+    'source', 'confidence', 'needs_review', 'is_anomaly',
+  ];
+  const rows = transactions.map((t) => [
+    t.txn_date ? t.txn_date.slice(0, 10) : '',
+    csvCell(t.description ?? ''),
+    t.amount ?? '',
+    t.category ?? '',
+    t.provenance,
+    t.confidence ?? '',
+    t.needs_review,
+    t.is_anomaly,
+  ].map(csvCell).join(','));
+
+  const csv = [header.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `raseed-transactions-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 export default function Dashboard(): JSX.Element {
   const [status, setStatus] = useState<Status>('loading');
@@ -39,13 +74,21 @@ export default function Dashboard(): JSX.Element {
       <main className="max-w-5xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          {status === 'loaded' && (
-            <button
-              onClick={() => void fetchDashboard()}
-              className="px-4 py-2 text-sm font-medium text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-50 transition-colors"
-            >
-              Refresh
-            </button>
+          {status === 'loaded' && data && (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => downloadTransactionsCsv(data.transactions)}
+                className="px-4 py-2 text-sm font-medium text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-50 transition-colors"
+              >
+                Download CSV
+              </button>
+              <button
+                onClick={() => void fetchDashboard()}
+                className="px-4 py-2 text-sm font-medium text-indigo-600 border border-indigo-300 rounded-lg hover:bg-indigo-50 transition-colors"
+              >
+                Refresh
+              </button>
+            </div>
           )}
         </div>
 

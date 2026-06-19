@@ -18,9 +18,9 @@ import pandas as pd
 FIXTURE_PATH = Path(__file__).parent.parent / "tests" / "fixtures" / "drift_skewed_batch.parquet"
 
 
-async def main() -> None:
-    from app.workers.drift import compute_drift_signals, compute_new_merchant_rate, compute_psi
+async def main() -> dict:
     from app.core.config import get_settings
+    from app.workers.drift import compute_drift_signals, compute_new_merchant_rate, compute_psi
 
     if not FIXTURE_PATH.exists():
         print(f"ERROR: fixture not found at {FIXTURE_PATH}")

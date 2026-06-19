@@ -32,7 +32,7 @@ export default function ReviewRow({ item, onConfirm }: Props): JSX.Element {
     : '—';
 
   const amountStr = item.amount != null
-    ? `£${Math.abs(item.amount).toFixed(2)}`
+    ? `$${Math.abs(item.amount).toFixed(2)}`
     : '—';
 
   if (done) {

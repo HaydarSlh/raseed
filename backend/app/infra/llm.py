@@ -17,9 +17,12 @@ Tier = Literal["mechanical", "synthesis"]
 
 PROMPTS_DIR = Path(__file__).parent.parent.parent / "prompts"
 
+# Both tiers use gemini-2.5-flash: it follows the JSON-action protocol reliably,
+# whereas 2.5-flash-lite intermittently returns empty text
+# (finish_reason=UNEXPECTED_TOOL_CALL), which wastes retries and free-tier quota.
 _GEMINI_MODELS: dict[Tier, str] = {
-    "mechanical": "gemini-2.0-flash-lite",
-    "synthesis": "gemini-2.0-flash",
+    "mechanical": "gemini-2.5-flash",
+    "synthesis": "gemini-2.5-flash",
 }
 
 
@@ -66,15 +69,28 @@ class GeminiGrokLLM(BaseLLM):
 
     async def _call_gemini(self, prompt: str, model_name: str) -> Completion:
         import google.genai as genai  # imported here so serving image without key won't fail at import
+        from google.genai import types
 
+        # Disable Gemini 2.5 "thinking": the agent runs its own ReAct loop, and
+        # thinking tokens can consume the response budget and return an empty
+        # `.text`. thinking_budget=0 makes mechanical/synthesis calls reliable.
+        config = types.GenerateContentConfig(
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
+        )
         async for attempt in with_retry(max_attempts=3, timeout=30.0):
             with attempt:
                 with span("llm.gemini", model=model_name):
                     client = genai.Client(api_key=self._gemini_key)
                     response = await client.aio.models.generate_content(
-                        model=model_name, contents=prompt
+                        model=model_name, contents=prompt, config=config
                     )
-                    return Completion(response.text or "", provider="gemini", model=model_name)
+                    text = response.text or ""
+                    # gemini-2.5-flash-lite occasionally returns empty text with
+                    # finish_reason=UNEXPECTED_TOOL_CALL. Treat empty as a transient
+                    # failure so with_retry re-attempts (not a 4xx → retryable).
+                    if not text.strip():
+                        raise UpstreamError(f"Gemini returned empty text ({model_name})")
+                    return Completion(text, provider="gemini", model=model_name)
         raise UpstreamError("Gemini retries exhausted")  # pragma: no cover
 
     async def _call_grok(self, prompt: str, *, tier: Tier) -> Completion:

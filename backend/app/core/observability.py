@@ -30,11 +30,26 @@ def span(name: str, **kv: Any) -> Generator[None, None, None]:
 
 
 def is_retryable(exc: BaseException) -> bool:
-    """4xx HTTP-like errors are client errors — do not retry them."""
-    status = getattr(exc, "status_code", None) or getattr(exc, "status", None)
-    if status is not None and 400 <= int(status) < 500:
-        return False
-    return True
+    """4xx HTTP-like errors are client errors — do not retry them.
+
+    Status may be a numeric HTTP code (e.g. 404) or a string label (e.g. the
+    google-genai ClientError exposes `.code` as an int and `.status` as
+    'NOT_FOUND'). Prefer a numeric code; if none is available, retry.
+    """
+    status = (
+        getattr(exc, "status_code", None)
+        or getattr(exc, "code", None)
+        or getattr(exc, "status", None)
+    )
+    try:
+        code = int(status)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return True
+    # 429 (rate limit) is retryable with backoff — it is not a permanent client
+    # error. All other 4xx are client errors and must not be retried.
+    if code == 429:
+        return True
+    return not (400 <= code < 500)
 
 
 def with_retry(

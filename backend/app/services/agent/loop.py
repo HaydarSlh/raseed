@@ -25,17 +25,84 @@ def _count_tokens(text: str) -> int:
 
 
 def _extract_json(text: str) -> dict[str, Any] | None:
-    """Extract the first JSON object from LLM output."""
-    match = re.search(r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)?\}", text, re.DOTALL)
-    if match:
-        try:
-            return json.loads(match.group())
-        except json.JSONDecodeError:
-            pass
+    """Extract the first balanced JSON object from LLM output.
+
+    Uses brace-counting (string-aware) so arbitrarily nested objects — e.g.
+    {"final": "...", "citations": [{...}, {...}]} — are parsed whole, rather than
+    a naive regex grabbing the first inner object.
+    """
+    text = text.strip()
+    # Strip markdown code fences the model often wraps JSON in.
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*", "", text)
+        text = re.sub(r"\s*```$", "", text).strip()
+
     try:
-        return json.loads(text.strip())
+        obj = json.loads(text)
+        if isinstance(obj, dict):
+            return obj
     except json.JSONDecodeError:
-        return None
+        pass
+
+    start = text.find("{")
+    while start != -1:
+        depth = 0
+        in_str = False
+        esc = False
+        for i in range(start, len(text)):
+            ch = text[i]
+            if in_str:
+                if esc:
+                    esc = False
+                elif ch == "\\":
+                    esc = True
+                elif ch == '"':
+                    in_str = False
+            elif ch == '"':
+                in_str = True
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    candidate = text[start : i + 1]
+                    try:
+                        obj = json.loads(candidate)
+                        if isinstance(obj, dict):
+                            return obj
+                    except json.JSONDecodeError:
+                        pass
+                    break
+        start = text.find("{", start + 1)
+    return None
+
+
+def _strip_json_objects(text: str) -> str:
+    """Remove balanced {...} JSON objects from text, leaving any prose behind."""
+    out: list[str] = []
+    depth = 0
+    in_str = False
+    esc = False
+    for ch in text:
+        if in_str:
+            if esc:
+                esc = False
+            elif ch == "\\":
+                esc = True
+            elif ch == '"':
+                in_str = False
+        elif ch == '"' and depth > 0:
+            in_str = True
+        elif ch == "{":
+            depth += 1
+        elif ch == "}":
+            if depth > 0:
+                depth -= 1
+            continue
+        if depth == 0 and ch not in "{}":
+            out.append(ch)
+    # Drop leftover code-fence markers.
+    return "".join(out).replace("```json", "").replace("```", "").strip()
 
 
 class AgentResult:
@@ -96,10 +163,11 @@ async def run_agent(
 
             if "final" in action:
                 raw_citations = action.get("citations", [])
-                citations = [c for c in raw_citations if isinstance(c, dict) and "document_slug" in c]
+                final_citations = [c for c in raw_citations if isinstance(c, dict) and "document_slug" in c]
+                # Merge any citations accumulated from earlier tool calls.
                 return AgentResult(
                     answer=str(action["final"]),
-                    citations=citations,
+                    citations=final_citations or citations,
                     bounded=False,
                     iterations=iterations,
                 )
@@ -126,10 +194,38 @@ async def run_agent(
                                 "heading_path": p.get("heading_path", ""),
                             })
             else:
-                # Unrecognised JSON structure — treat as final answer
+                # No "final"/"tool" key — the model often writes the prose answer
+                # outside the JSON and emits a bare {"citations": [...]} object.
+                # Recover the prose; fall back to a synthesis pass if there's none.
+                prose = _strip_json_objects(response_text).strip()
+                obj_citations = [
+                    c for c in action.get("citations", [])
+                    if isinstance(c, dict) and "document_slug" in c
+                ]
+                if len(prose) >= 20:
+                    return AgentResult(
+                        answer=prose,
+                        citations=obj_citations or citations,
+                        bounded=False,
+                        iterations=iterations,
+                    )
+                # No usable prose — ask the model once for a clean final answer.
+                synth = (
+                    f"{prompt}\n{response_text}\n\nNow write the final answer for the user "
+                    'as JSON: {"final": "<plain-language answer>", "citations": []}'
+                )
+                completion = await llm.complete(synth, tier="synthesis")
+                synth_action = _extract_json(completion.text)
+                if synth_action and "final" in synth_action:
+                    return AgentResult(
+                        answer=str(synth_action["final"]),
+                        citations=obj_citations or citations,
+                        bounded=False,
+                        iterations=iterations,
+                    )
                 return AgentResult(
-                    answer=str(action),
-                    citations=citations,
+                    answer=_strip_json_objects(completion.text).strip() or str(action),
+                    citations=obj_citations or citations,
                     bounded=False,
                     iterations=iterations,
                 )

@@ -68,11 +68,30 @@ services:
         condition: service_healthy
     restart: "no"
 
+  # One-shot: embed the RAG knowledge corpus into knowledge_passages, then exits 0.
+  # Idempotent by content hash (re-running on every boot is cheap — unchanged docs
+  # are skipped). Requires the schema (migrate) and a reachable embedder.
+  ingest-corpus:
+    build: ./backend
+    command: ["python", "-m", "scripts.ingest_corpus"]
+    env_file: .env
+    volumes:
+      - ./rag-corpus:/rag-corpus:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
   backend:
     build: ./backend
     env_file: .env
     volumes:
       - ./eval_thresholds.yaml:/app/eval_thresholds.yaml:ro
+      # RAG knowledge corpus (read-only) — ingested via `python -m scripts.ingest_corpus`.
+      # The ingest script resolves the corpus at /rag-corpus (repo-root-relative).
+      - ./rag-corpus:/rag-corpus:ro
     ports:
       - "8000:8000"
     depends_on:
@@ -121,6 +140,12 @@ services:
       - "5173:5173"
     depends_on:
       - backend
+    healthcheck:
+      # node:20-slim has no wget/curl — use node's http module for the check.
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5173',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
 
   # Heavy training image — built/run ONLY with: docker compose --profile training up
   trainer:

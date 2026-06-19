@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any, cast
 
 import structlog
-from sqlalchemy import text
+from sqlalchemy import CursorResult, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.erasure_audit import ErasureAudit
@@ -51,14 +52,15 @@ class ErasureService:
                     text(f"DELETE FROM {table} WHERE user_id = :uid"),  # noqa: S608
                     {"uid": user_id},
                 )
-                counts[table] = result.rowcount
+                # DELETE returns a CursorResult; Result[Any] doesn't expose rowcount.
+                counts[table] = cast("CursorResult[Any]", result).rowcount
 
             # Delete the user row last (FK cascade handles remaining references)
             result = await self._session.execute(
                 text("DELETE FROM users WHERE id = :uid"),
                 {"uid": user_id},
             )
-            counts["users"] = result.rowcount
+            counts["users"] = cast("CursorResult[Any]", result).rowcount
 
         # 2. Purge Redis keys for this user (scan + delete, parallel)
         redis_count = await self._purge_redis(user_id)
@@ -81,7 +83,7 @@ class ErasureService:
             redis = get_redis()
             pattern = f"raseed:*:{user_id}"
             cursor = 0
-            keys: list[str] = []
+            keys: list[str | bytes] = []
             while True:
                 cursor, batch = await redis.scan(cursor, match=pattern, count=100)
                 keys.extend(batch)
@@ -97,7 +99,7 @@ class ErasureService:
     async def _write_audit(self, user_id: uuid.UUID, counts: dict[str, int]) -> uuid.UUID:
         audit = ErasureAudit(
             user_id=user_id,
-            completed_at=datetime.now(timezone.utc),
+            completed_at=datetime.now(UTC),
             per_store_counts=counts,
             status="completed",
         )
