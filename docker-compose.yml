@@ -68,6 +68,22 @@ services:
         condition: service_healthy
     restart: "no"
 
+  # One-shot: embed the RAG knowledge corpus into knowledge_passages, then exits 0.
+  # Idempotent by content hash (re-running on every boot is cheap — unchanged docs
+  # are skipped). Requires the schema (migrate) and a reachable embedder.
+  ingest-corpus:
+    build: ./backend
+    command: ["python", "-m", "scripts.ingest_corpus"]
+    env_file: .env
+    volumes:
+      - ./rag-corpus:/rag-corpus:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
   backend:
     build: ./backend
     env_file: .env

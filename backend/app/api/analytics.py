@@ -46,6 +46,7 @@ class TransactionOut(BaseModel):
     id: uuid.UUID
     txn_date: datetime | None
     amount: float | None
+    description: str | None
     category: str | None
     confidence: float | None
     provenance: str
@@ -118,6 +119,7 @@ async def get_dashboard(
             id=t.id,
             txn_date=t.occurred_at,
             amount=float(t.amount) if t.amount is not None else None,
+            description=t.description,
             category=t.category,
             confidence=t.confidence,
             provenance=t.provenance.value,

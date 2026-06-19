@@ -26,7 +26,7 @@ export default function SubscriptionsPanel({ subscriptions }: Props): JSX.Elemen
             </div>
             <p className="text-sm text-gray-500 capitalize">{sub.cadence}</p>
             <p className="text-lg font-bold text-gray-800 mt-1">
-              £{sub.typical_amount.toFixed(2)}
+              ${sub.typical_amount.toFixed(2)}
             </p>
             {sub.next_charge_date && (
               <p className="text-xs text-gray-400 mt-1">

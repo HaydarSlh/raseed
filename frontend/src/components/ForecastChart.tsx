@@ -40,10 +40,10 @@ export default function ForecastChart({ forecast }: Props): JSX.Element {
             tick={{ fontSize: 11, fill: '#9ca3af' }}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(v: number) => `£${v.toFixed(0)}`}
+            tickFormatter={(v: number) => `$${v.toFixed(0)}`}
           />
           <Tooltip
-            formatter={(value: number) => [`£${value.toFixed(2)}`, 'Projected balance']}
+            formatter={(value: number) => [`$${value.toFixed(2)}`, 'Projected balance']}
             labelStyle={{ fontSize: 11 }}
           />
           <Line

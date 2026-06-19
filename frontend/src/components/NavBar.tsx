@@ -13,6 +13,12 @@ export default function NavBar(): JSX.Element {
       <span className="text-xl font-bold text-indigo-600">Raseed</span>
       <div className="flex items-center gap-4">
         <Link
+          to="/dashboard"
+          className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
+        >
+          Dashboard
+        </Link>
+        <Link
           to="/chat"
           className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
         >

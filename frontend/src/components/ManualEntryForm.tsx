@@ -33,7 +33,7 @@ export default function ManualEntryForm({ onSuccess }: Props): JSX.Element {
         amount: amountNum,
         description: description.trim(),
         merchant: merchant.trim() || null,
-        currency: 'GBP',
+        currency: 'USD',
       });
       setSuccessMsg(
         `Added — categorized as "${result.category ?? 'uncategorized'}".`,

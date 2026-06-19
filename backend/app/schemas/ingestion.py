@@ -16,7 +16,7 @@ class ParsedRow(BaseModel):
     amount: Decimal
     description: str
     merchant: str | None = None
-    currency: str | None = "GBP"
+    currency: str | None = "USD"
 
 
 class IngestResult(BaseModel):

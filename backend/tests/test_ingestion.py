@@ -69,7 +69,16 @@ async def test_rule_matched_skips_model(user_id, sample_row):
 
 
 @pytest.mark.asyncio
-async def test_model_below_threshold_flagged(user_id, sample_row):
+async def test_model_below_threshold_flagged(user_id):
+    # Description must NOT match any high-precision rule in rules.py, or it would
+    # short-circuit to provenance='rule' (confidence 1.0, never flagged) and never
+    # reach the model. A small independent merchant is deliberately left to the model.
+    model_routed_row = ParsedRow(
+        occurred_at=datetime(2026, 6, 1),
+        amount=Decimal("-12.50"),
+        description="THE CORNER MINIMART LDN",
+        currency="GBP",
+    )
     mock_repo = AsyncMock()
     mock_repo.insert_skip_duplicates = AsyncMock(return_value=1)
 
@@ -78,7 +87,7 @@ async def test_model_below_threshold_flagged(user_id, sample_row):
     mock_client.classify = AsyncMock(return_value=[{"label": "groceries", "confidence": 0.85}])
 
     with patch("app.services.ingestion.enqueue_recompute"):
-        result = await ingest_transactions(user_id, [sample_row], mock_repo, mock_client)
+        result = await ingest_transactions(user_id, [model_routed_row], mock_repo, mock_client)
 
     assert result.needs_review == 1
     assert result.ingested == 1
