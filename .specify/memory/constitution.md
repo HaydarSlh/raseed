@@ -1,6 +1,17 @@
 <!--
 SYNC IMPACT REPORT
 ==================
+Version change: 1.0.0 → 1.1.0 (2026-06-19)
+Bump rationale (MINOR): Clarified Art. III + Technology Stack to match the
+  implemented ML lifecycle. The trainer container is a CPU sklearn→ONNX retrainer,
+  NOT a torch image; torch/transformers run only OFFLINE (dev box/Colab) to build
+  the initial champion. The core invariant (no torch in any serving image; lean
+  serving path) is unchanged — this corrects stale stack wording, so MINOR not
+  MAJOR. Migration: removed torch/transformers from trainer/pyproject.toml (they
+  were declared but never imported by trainer/train.py and dragged a 3GB+ CUDA
+  wheel stack into the image build). See DECISIONS.md 2026-06-19 row.
+
+Prior version history:
 Version change: (template, unversioned) → 1.0.0
 Bump rationale: First concrete ratification of the constitution from the template
   placeholder. Initial adoption ⇒ MAJOR baseline 1.0.0.
@@ -80,10 +91,13 @@ human-confirmed labels are training data; LLM relabels are quarantined in a
 reviewable queue until a human confirms them. The frozen holdout set is touched
 only by the champion/challenger gate, and a retrained model is promoted ONLY if
 it beats the champion AND an operator approves. No torch or transformers ship in
-any serving image (model-server stays lean: onnxruntime + numpy); the trainer is
-the single deliberately heavy image, off the default compose profile and never on
-a request path. Model artifacts ship with a model card and a pinned SHA-256, and
-servers MUST refuse to boot on a hash mismatch.
+any serving image (model-server stays lean: onnxruntime + numpy). Torch and
+transformers run ONLY offline — on a dev box or Colab — to fine-tune the initial
+champion, which is exported to ONNX before it ever enters the stack; no container
+installs them. The in-stack retrainer is a CPU-only sklearn→ONNX job (TF-IDF+LR
+seeded from the champion), off the default compose profile (RQ `training` queue)
+and never on a request path. Model artifacts ship with a model card and a pinned
+SHA-256, and servers MUST refuse to boot on a hash mismatch.
 
 **Rationale:** Training only on human-confirmed labels, gating promotion on a
 clean holdout plus human sign-off, and refusing to boot mismatched artifacts keep
@@ -139,8 +153,11 @@ The stack is fixed and MUST NOT be substituted:
 - **Storage:** MinIO for model artifacts only — never user files.
 - **Secrets:** Vault for all secrets.
 - **ML serving:** model-server container (onnxruntime + numpy, lean,
-  refuse-to-boot hash check); trainer container (heavy, torch, `training` compose
-  profile, RQ `training` queue); light worker (stats job, drift, Slack webhook).
+  refuse-to-boot hash check); trainer container (CPU sklearn→ONNX retrain — no
+  torch/transformers — `training` compose profile, RQ `training` queue); light
+  worker (stats job, drift, Slack webhook). Transformer fine-tuning of the initial
+  champion is an offline step (torch/transformers on a dev box/Colab), not a
+  container.
 - **LLM:** adapter over Gemini Flash-Lite (mechanical) / Gemini Flash (synthesis)
   with Grok failover.
 - **Observability/CI:** structlog + request IDs; GitHub Actions.
@@ -177,4 +194,4 @@ it, the constitution wins.
 - **Runtime guidance** for the implementation agent lives in `CLAUDE.md`; it
   elaborates but never overrides these articles.
 
-**Version**: 1.0.0 | **Ratified**: 2026-06-12 | **Last Amended**: 2026-06-12
+**Version**: 1.1.0 | **Ratified**: 2026-06-12 | **Last Amended**: 2026-06-19

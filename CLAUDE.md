@@ -17,8 +17,9 @@ React (Vite) SPA · FastAPI (async, layered: api/services/repositories/domain/in
 · Postgres + pgvector with per-user RLS (session var `app.user_id`, reset on
 connection release) · fastapi-users (JWT) · Redis (sessions + RQ) · MinIO (model
 artifacts only — never user files) · Vault (all secrets) · model-server container
-(onnxruntime + numpy, lean, refuse-to-boot hash check) · trainer container (heavy,
-torch, `training` compose profile, RQ `training` queue) · light worker (stats job,
+(onnxruntime + numpy, lean, refuse-to-boot hash check) · trainer container (CPU
+sklearn→ONNX retrain, no torch, `training` compose profile, RQ `training` queue;
+torch/transformers fine-tuning is offline only) · light worker (stats job,
 drift, Slack webhook) · LLM adapter: Gemini Flash-Lite (mechanical) / Gemini Flash
 (synthesis) -> Grok failover · Alembic · structlog + request IDs · GitHub Actions.
 
@@ -26,7 +27,7 @@ drift, Slack webhook) · LLM adapter: Gemini Flash-Lite (mechanical) / Gemini Fl
 - Every query user-scoped; RLS is the backstop, not the only line.
 - Raw statement files are never persisted; PAN/IBAN scrubbed in the parser.
 - Only human-confirmed labels train the model; LLM relabels are quarantined.
-- No torch in any serving image; the trainer is the single heavy image.
+- No torch in any container; serving is lean ONNX, the trainer is CPU sklearn→ONNX (torch fine-tuning is offline only).
 - The user's numbers come from exact SQL, never from RAG.
 - Prompts live in `prompts/`; secrets resolve from Vault; nothing hardcoded.
 - Webhook payloads carry ops signals only — never user-level transaction data.

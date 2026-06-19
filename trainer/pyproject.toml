@@ -1,14 +1,27 @@
-# Trainer deps: the ONLY place torch/transformers appear. This image is built and
-# run exclusively under the `training` compose profile (constitution Art. III).
+# In-stack retrain deps. These MUST match what trainer/train.py actually imports.
+# The implemented retrain is a CPU-safe sklearn TF-IDF+LR pipeline exported to ONNX
+# (see train.py:_partial_unfreeze_retrain) — NOT a torch transformer fine-tune. The
+# transformer fine-tune lives offline in training/train_champion_local.py (torch runs
+# on a dev box / Colab to build the first champion), never inside this container.
+# Hence no torch/transformers here: pulling them dragged in a 3GB+ CUDA wheel stack
+# that nothing imports and that broke the image build. Profile-gated (Art. III).
 [project]
 name = "raseed-trainer"
 version = "0.0.0"
-description = "Heavy training image (torch). Profile-gated; never on a request path."
+description = "In-stack retrain image (sklearn->ONNX). Profile-gated; never on a request path."
 requires-python = ">=3.12"
 dependencies = [
-    "torch>=2.3",
-    "transformers>=4.42",
+    "scikit-learn>=1.4",
+    "skl2onnx>=1.16",
     "onnx>=1.16",
+    "onnxruntime>=1.18",
+    "pandas>=2.2",
+    "pyarrow>=16.0",
+    "numpy>=1.26",
+    "sqlalchemy>=2.0",
+    "psycopg2-binary>=2.9",
+    "structlog>=24.1",
+    "requests>=2.31",
     "rq>=1.16",
     "redis>=5.0",
 ]

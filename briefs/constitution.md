@@ -38,11 +38,11 @@ A task that violates an article is wrong even if it works.
 14. The frozen holdout set is touched only by the champion/challenger gate.
     A retrained model is promoted only if it beats the champion, and promotion
     requires human (operator) approval.
-15. No torch or transformers in any serving image (model-server stays
-    onnxruntime + numpy, lean). The trainer container is the single deliberately
-    heavy image, off the default compose profile, never on a request path.
-    Initial full fine-tuning happens offline in Colab on GPU; in-stack retrains
-    use a partial-unfreeze policy sized for CPU.
+15. No torch or transformers in any container (model-server stays onnxruntime +
+    numpy, lean). The trainer container is a CPU-only sklearn→ONNX retrainer, off
+    the default compose profile, never on a request path. Initial full fine-tuning
+    happens offline in Colab on GPU (torch/transformers there only); in-stack
+    retrains use a partial-unfreeze policy sized for CPU.
 16. Model artifacts ship with a model card and pinned SHA-256; servers refuse to
     boot on a hash mismatch (guards activate in the phase that introduces the
     guarded artifact).
