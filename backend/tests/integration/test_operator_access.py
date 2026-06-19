@@ -39,6 +39,7 @@ def _operator_user():
 async def test_non_operator_cannot_trigger_retrain() -> None:
     """Non-operator calling POST /ops/retrain receives 403."""
     from fastapi import HTTPException
+
     from app.api.ops import _require_operator
 
     non_op = _non_operator_user()
@@ -51,6 +52,7 @@ async def test_non_operator_cannot_trigger_retrain() -> None:
 async def test_non_operator_cannot_promote() -> None:
     """Non-operator calling POST /ops/promote receives 403."""
     from fastapi import HTTPException
+
     from app.api.ops import _require_operator
 
     non_op = _non_operator_user()

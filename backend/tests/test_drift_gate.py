@@ -26,8 +26,8 @@ def _require_fixture() -> None:
 
 def test_gate7_primary_signal_fires_on_skewed_batch() -> None:
     """Mean confidence of skewed batch falls below threshold → primary signal fires."""
-    from app.workers.drift import compute_drift_signals, compute_new_merchant_rate, compute_psi
     from app.core.config import get_settings
+    from app.workers.drift import compute_drift_signals, compute_new_merchant_rate, compute_psi
 
     df = pd.read_parquet(FIXTURE_PATH)
     settings = get_settings()
@@ -71,9 +71,9 @@ def test_gate7_primary_signal_fires_on_skewed_batch() -> None:
 
 def test_gate7_slack_alert_sent_on_primary_crossing() -> None:
     """Primary crossing → Slack drift_alarm payload is passed to the sender."""
+    from app.core.config import get_settings
     from app.workers.drift import compute_drift_signals
     from app.workers.slack_webhook import build_drift_alarm_payload
-    from app.core.config import get_settings
 
     df = pd.read_parquet(FIXTURE_PATH)
     settings = get_settings()
@@ -113,8 +113,8 @@ def test_gate7_slack_alert_sent_on_primary_crossing() -> None:
 
 def test_gate7_enqueue_retrain_called_on_primary_crossing() -> None:
     """Primary crossing → enqueue_retrain is called (fake queue — stack-independent)."""
-    from app.workers.drift import compute_drift_signals
     from app.core.config import get_settings
+    from app.workers.drift import compute_drift_signals
 
     df = pd.read_parquet(FIXTURE_PATH)
     settings = get_settings()

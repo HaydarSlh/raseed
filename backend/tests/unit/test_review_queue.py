@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -18,7 +18,7 @@ def _make_txn(user_id: uuid.UUID, *, needs_review: bool = True) -> Transaction:
         user_id=user_id,
         amount=-42.10,
         currency="GBP",
-        occurred_at=datetime(2026, 6, 10, tzinfo=timezone.utc),
+        occurred_at=datetime(2026, 6, 10, tzinfo=UTC),
         merchant="TESCO",
         normalized_description="TESCO STORES 1234",
         category="groceries",

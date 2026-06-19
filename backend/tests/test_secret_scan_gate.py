@@ -9,8 +9,6 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-import pytest
-
 _REPO_ROOT = Path(__file__).parent.parent.parent
 _APP_DIRS = [
     str(_REPO_ROOT / "backend" / "app"),

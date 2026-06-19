@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import structlog
@@ -110,7 +110,7 @@ async def run_drift_monitor(
     from app.workers.slack_webhook import build_drift_alarm_payload, send_slack_async
 
     settings = get_settings()
-    since = datetime.now(timezone.utc) - timedelta(days=window_days)
+    since = datetime.now(UTC) - timedelta(days=window_days)
 
     # 1. Compute mean confidence over window (privileged, aggregates only)
     conf_result = await session.execute(

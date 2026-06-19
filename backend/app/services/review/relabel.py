@@ -6,7 +6,6 @@ import uuid
 from pathlib import Path
 
 import structlog
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.correction import Correction, CorrectionProvenance

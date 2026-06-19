@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import uuid
 
-
 # Fields that must NEVER appear in any Slack payload (Art. II)
 FORBIDDEN_FIELDS = {"description", "merchant", "amount", "user_id", "normalized_description", "transaction_id"}
 FORBIDDEN_VALUES = {

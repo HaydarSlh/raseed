@@ -19,13 +19,13 @@ from app.schemas.ops import (
     DriftResponse,
     DriftSeriesPoint,
     DriftStatus,
-    ModelSummary,
     ModelsResponse,
+    ModelSummary,
     PromoteRequest,
     PromoteResponse,
+    RetrainHistoryItem,
     RetrainRequest,
     RetrainResponse,
-    RetrainHistoryItem,
     RetrainsResponse,
 )
 from app.services.lifecycle.promote import PromoteService
@@ -75,9 +75,9 @@ async def promote_model(
     try:
         return await svc.promote(body.model_registry_id, uuid.UUID(str(operator.id)))
     except RaseedPermissionError as exc:
-        raise HTTPException(status_code=409, detail=exc.message)
+        raise HTTPException(status_code=409, detail=exc.message) from exc
     except UpstreamError as exc:
-        raise HTTPException(status_code=502, detail=exc.message)
+        raise HTTPException(status_code=502, detail=exc.message) from exc
 
 
 @router.get("/models", response_model=ModelsResponse)

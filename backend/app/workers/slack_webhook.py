@@ -118,8 +118,9 @@ def _send_with_retry(url: str, payload: dict) -> None:
 
 async def send_slack_async(payload: dict) -> None:
     """Async variant for use from async worker paths."""
-    from app.core.config import get_settings
     import httpx
+
+    from app.core.config import get_settings
 
     settings = get_settings()
     webhook_url = settings.slack_webhook_url
