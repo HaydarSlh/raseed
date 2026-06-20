@@ -69,7 +69,7 @@ Gate smoke test: `bash scripts/smoke_compose.sh`
 - **Backend**: FastAPI (async, layered) — `backend/`
 - **Model server**: lean ONNX Runtime container — `modelserver/`
 - **Worker**: Prophet + drift + RQ — `worker/`
-- **Trainer**: torch, off default profile — `trainer/`
+- **Trainer**: CPU sklearn→ONNX retrain (no torch), off default profile — `trainer/`
 - **Data**: Postgres + pgvector (per-user RLS), Redis, MinIO (model artifacts only)
 - **Secrets**: Vault at startup
 - **LLM**: Gemini Flash-Lite / Flash → Grok failover

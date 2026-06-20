@@ -21,8 +21,9 @@ Informational tool — never licensed financial advice.
 React (Vite) SPA · FastAPI async layered backend · Postgres + pgvector with
 per-user RLS (session var, reset on release) · fastapi-users JWT · Redis
 (sessions + RQ) · MinIO (model artifacts ONLY) · Vault · lean model-server
-(onnxruntime) · trainer (heavy, torch, profile `training`) [v1.1: split from the
-light worker] · light worker (stats job, drift, Slack webhook) · LLM adapter:
+(onnxruntime) · trainer (CPU sklearn→ONNX retrain, no torch, profile `training`)
+[v1.1: split from the light worker; torch removed — fine-tuning is offline only]
+· light worker (stats job, drift, Slack webhook) · LLM adapter:
 Gemini Flash-Lite (mechanical) / Gemini Flash (synthesis) -> Grok failover
 [v1.1: two-tier routing confirmed] · Alembic · structlog · GitHub Actions ·
 Graphify (project-scoped) for codebase navigation.
