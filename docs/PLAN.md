@@ -7,8 +7,9 @@ v1.1 = v1.0 (the PDF) + post-audit refinements, marked inline.
 
 ## MISSION
 A user signs up, gets an isolated account, uploads bank/card statements. An
-ingestion pipeline categorizes every transaction with a developer-fine-tuned
-model, forecasts cash flow, detects anomalies and subscriptions. A bounded
+ingestion pipeline categorizes every transaction with a TF-IDF + Logistic
+Regression model (exported to ONNX), forecasts cash flow, detects anomalies and
+subscriptions. A bounded
 tool-calling agent answers money questions grounded in exact queries over the
 user's own data, retrieves financial-literacy guidance through RAG, tracks
 goals, runs what-if scenarios. Corrections feed a gated retraining loop with
@@ -44,6 +45,9 @@ COLAB ON GPU [v1.1: explicit]; ONNX + model card + SHA; lean model-server with
 refuse-to-boot (guard activates in Phase 2 — Phase 0 stub serves a "no model
 loaded" healthz [v1.1 fix]). Three approaches, one number: TF-IDF+LR vs
 DistilBERT vs Gemini zero-shot — macro-F1, per-class F1, latency, cost.
+[OUTCOME: TF-IDF+LR won (holdout 0.8934) and ships as champion; the offline
+DistilBERT fine-tune lost (0.8677) and was never promoted — see DECISIONS.md
+2026-06-16.]
 Operating threshold by explicit rule. Provenance: rule|model|llm|human.
 Frozen holdout committed via Git LFS; CI artifacts come from LFS/release
 assets, never the running stack [v1.1 fix].

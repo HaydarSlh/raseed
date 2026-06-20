@@ -1,7 +1,7 @@
 # CLAUDE.md — Raseed master context
 
 Raseed (رصيد, "balance") is a B2C personal-finance intelligence platform:
-statement upload -> ingestion pipeline (fine-tuned categorizer, Prophet forecaster,
+statement upload -> ingestion pipeline (TF-IDF + Logistic Regression categorizer, Prophet forecaster,
 anomaly + recurring detectors) -> isolated per-user data -> a bounded tool-calling
 agent grounded in exact queries + RAG over financial-literacy knowledge -> a full
 ML lifecycle (human corrections -> gated retrain -> drift detection -> Slack alerts).
