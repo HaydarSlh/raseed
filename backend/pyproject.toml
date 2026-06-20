@@ -28,6 +28,7 @@ dependencies = [
     "pyyaml>=6.0",
     "python-multipart>=0.0.9",
     "pgvector>=0.3",
+    "minio>=7.2",
 ]
 
 [project.optional-dependencies]
