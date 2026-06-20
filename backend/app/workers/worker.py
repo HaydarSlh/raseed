@@ -1,8 +1,9 @@
-"""Light-worker bootstrap: connects to Redis and consumes default, stats, and training queues.
+"""Light-worker bootstrap: connects to Redis and consumes default and stats queues.
 
 Entrypoint for the `worker` compose service (constitution Art. V).
-The `training` queue is consumed here so that in-process tests can verify the
-enqueue path; the actual training container consumes it in the `training` compose profile.
+The `training` queue is consumed SOLELY by the heavy trainer container under the
+`training` compose profile — the light worker never listens on it, so it cannot
+race the trainer and fail jobs it cannot execute (Art. III).
 Daily drift monitor runs via RQ-Scheduler.
 """
 
@@ -56,7 +57,7 @@ async def run_batch_relabel(user_id: str) -> None:
 
 
 def main() -> None:
-    """Boot the light worker listening on default, stats, and training queues."""
+    """Boot the light worker listening on default and stats queues."""
     settings = get_settings()
     configure_logging(settings.log_level)
     log = get_logger("worker")
@@ -66,7 +67,6 @@ def main() -> None:
     queues = [
         Queue("default", connection=connection),
         Queue("stats", connection=connection),
-        Queue("training", connection=connection),
     ]
     worker = Worker(queues, connection=connection)
     worker.work(with_scheduler=True)  # enable scheduler for daily drift
