@@ -23,6 +23,7 @@ function renderChat() {
 describe('Chat page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear(); // chat now persists to localStorage — isolate tests
   });
 
   it('renders prompt input and send button', () => {

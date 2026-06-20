@@ -10,6 +10,7 @@ vi.mock('../api/reviewApi', () => ({
     confirm: vi.fn(),
     getReviewMode: vi.fn(),
     setReviewMode: vi.fn(),
+    relabelAll: vi.fn(),
   },
 }));
 
@@ -20,6 +21,7 @@ const mockReviewApi = reviewApi as any as {
   getQueue: ReturnType<typeof vi.fn>;
   confirm: ReturnType<typeof vi.fn>;
   setReviewMode: ReturnType<typeof vi.fn>;
+  relabelAll: ReturnType<typeof vi.fn>;
 };
 
 const NORMAL_ITEM = {
@@ -105,7 +107,7 @@ describe('Review page', () => {
     );
   });
 
-  it('shows done state after successful confirm', async () => {
+  it('removes the row from the queue after confirm (UI reflects persisted state)', async () => {
     mockReviewApi.getQueue.mockResolvedValue({
       items: [NORMAL_ITEM],
       review_mode: 'manual',
@@ -124,12 +126,38 @@ describe('Review page', () => {
       fireEvent.click(screen.getByTestId('review-row-confirm'));
     });
 
-    await waitFor(() => expect(screen.getByTestId('review-row-done')).toBeDefined());
+    // Row is removed from the parent's items state — the done banner is gone
+    // and the "No items to review" empty state appears.
+    await waitFor(() =>
+      expect(screen.queryByTestId('review-row-done')).toBeNull(),
+    );
+    expect(screen.getByText('No items to review.')).toBeDefined();
   });
 
   it('renders mode toggle', async () => {
     mockReviewApi.getQueue.mockResolvedValue({ items: [], review_mode: 'manual' });
     renderReview();
     await waitFor(() => expect(screen.getByTestId('review-mode-toggle')).toBeDefined());
+  });
+
+  it('renders the LLM label all button beside the toggle', async () => {
+    mockReviewApi.getQueue.mockResolvedValue({ items: [], review_mode: 'manual' });
+    renderReview();
+    await waitFor(() => expect(screen.getByTestId('review-relabel-all')).toBeDefined());
+  });
+
+  it('calls relabelAll when the LLM label all button is clicked', async () => {
+    mockReviewApi.getQueue.mockResolvedValue({ items: [], review_mode: 'manual' });
+    mockReviewApi.relabelAll.mockResolvedValue({ queued: true, user_id: 'u-1' });
+
+    renderReview();
+    await waitFor(() => expect(screen.getByTestId('review-relabel-all')).toBeDefined());
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('review-relabel-all'));
+    });
+
+    await waitFor(() => expect(mockReviewApi.relabelAll).toHaveBeenCalled());
+    expect(screen.getByTestId('review-relabel-msg')).toBeDefined();
   });
 });

@@ -54,10 +54,10 @@ export default function ReviewRow({ item, onConfirm }: Props): JSX.Element {
         className="flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-sm"
       >
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-gray-800 truncate">
+          <p className="font-medium text-ink truncate">
             {item.description ?? item.merchant ?? '(no description)'}
           </p>
-          <p className="text-xs text-gray-500">{dateStr} · {amountStr}</p>
+          <p className="text-xs text-faint">{dateStr} · {amountStr}</p>
         </div>
         <span className="text-amber-600 font-medium text-xs whitespace-nowrap">
           Awaiting confirmation · {item.current_category}
@@ -69,13 +69,13 @@ export default function ReviewRow({ item, onConfirm }: Props): JSX.Element {
   return (
     <div
       data-testid="review-row"
-      className="flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm"
+      className="flex items-center gap-3 px-4 py-3 bg-surface border border-line rounded-lg text-sm"
     >
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-gray-800 truncate">
+        <p className="font-medium text-ink truncate">
           {item.description ?? item.merchant ?? '(no description)'}
         </p>
-        <p className="text-xs text-gray-500">{dateStr} · {amountStr}</p>
+        <p className="text-xs text-faint">{dateStr} · {amountStr}</p>
       </div>
 
       <select
@@ -83,7 +83,7 @@ export default function ReviewRow({ item, onConfirm }: Props): JSX.Element {
         value={selected}
         onChange={e => setSelected(e.target.value)}
         disabled={busy}
-        className="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+        className="text-sm border border-line rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-400"
       >
         {CATEGORIES.map(cat => (
           <option key={cat} value={cat}>{cat}</option>

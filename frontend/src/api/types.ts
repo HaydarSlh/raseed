@@ -69,3 +69,24 @@ export interface ManualTransactionResultView {
   provenance: string;
   needs_review: boolean;
 }
+
+export interface RegisterInput {
+  email: string;
+  password: string;
+  username: string;
+  phone_number: string | null;
+  country: string | null;
+  city: string | null;
+  bank_name: string | null;
+}
+
+export interface UserView {
+  id: string;
+  email: string;
+  is_operator: boolean;
+  username: string | null;
+  phone_number: string | null;
+  country: string | null;
+  city: string | null;
+  bank_name: string | null;
+}

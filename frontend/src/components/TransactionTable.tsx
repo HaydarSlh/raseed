@@ -22,8 +22,8 @@ function ProvenanceChip({ provenance }: { provenance: string }): JSX.Element {
     <span
       className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium ${
         isRule
-          ? 'bg-blue-50 text-blue-700 border border-blue-200'
-          : 'bg-purple-50 text-purple-700 border border-purple-200'
+          ? 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30'
+          : 'bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/30'
       }`}
     >
       {isRule ? 'rule' : 'model'}
@@ -32,42 +32,42 @@ function ProvenanceChip({ provenance }: { provenance: string }): JSX.Element {
 }
 
 export default function TransactionTable({ transactions, anomalyIds }: Props): JSX.Element {
-  const sorted = [...transactions].sort((a, b) => {
-    if (!a.txn_date) return 1;
-    if (!b.txn_date) return -1;
-    return b.txn_date.localeCompare(a.txn_date);
-  });
+  // Render in the order given — the parent (Dashboard) owns sorting/filtering so the
+  // table stays presentational. Default order from the API is newest-first.
+  const rows = transactions;
 
-  if (sorted.length === 0) {
-    return <p className="text-sm text-gray-400">No transactions.</p>;
+  if (rows.length === 0) {
+    return <p className="text-sm text-faint">No transactions match your filters.</p>;
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div className="overflow-auto max-h-[28rem] rounded-xl border border-line bg-surface shadow-card">
       <table className="min-w-full text-sm">
-        <thead>
-          <tr className="border-b border-gray-100 bg-gray-50">
-            <th className="px-4 py-3 text-left font-medium text-gray-600">Date</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-600">Description</th>
-            <th className="px-4 py-3 text-right font-medium text-gray-600">Amount</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-600">Category</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-600">Source</th>
+        <thead className="sticky top-0 z-10 bg-elevated">
+          <tr className="border-b border-line">
+            <th className="px-4 py-3 text-left font-medium text-faint">Date</th>
+            <th className="px-4 py-3 text-left font-medium text-faint">Description</th>
+            <th className="px-4 py-3 text-right font-medium text-faint">Amount</th>
+            <th className="px-4 py-3 text-left font-medium text-faint">Category</th>
+            <th className="px-4 py-3 text-left font-medium text-faint">Source</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50">
-          {sorted.map((txn) => {
+        <tbody className="divide-y divide-line">
+          {rows.map((txn) => {
             const isAnomaly = txn.is_anomaly || anomalyIds.has(txn.id);
             return (
               <tr
                 key={txn.id}
-                className={`hover:bg-gray-50 transition-colors ${
-                  isAnomaly ? 'bg-amber-50 hover:bg-amber-100' : ''
+                className={`transition-colors ${
+                  isAnomaly
+                    ? 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-500/10 dark:hover:bg-amber-500/20'
+                    : 'hover:bg-elevated'
                 }`}
               >
-                <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                <td className="px-4 py-3 text-faint whitespace-nowrap">
                   {formatDate(txn.txn_date)}
                 </td>
-                <td className="px-4 py-3 text-gray-800 max-w-xs truncate">
+                <td className="px-4 py-3 text-ink max-w-xs truncate">
                   <span className="flex items-center gap-2">
                     {txn.needs_review && (
                       <span
@@ -76,22 +76,24 @@ export default function TransactionTable({ transactions, anomalyIds }: Props): J
                         aria-label="needs review"
                       />
                     )}
-                    <span className="text-gray-700">
+                    <span className="text-ink">
                       {txn.description ?? '—'}
                     </span>
                   </span>
                 </td>
                 <td
                   className={`px-4 py-3 text-right font-mono whitespace-nowrap ${
-                    txn.amount !== null && txn.amount < 0 ? 'text-red-600' : 'text-green-600'
-                  } ${txn.amount === null ? 'text-gray-400' : ''}`}
+                    txn.amount === null
+                      ? 'text-faint'
+                      : txn.amount < 0
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-green-600 dark:text-green-400'
+                  }`}
                 >
                   {formatAmount(txn.amount)}
                 </td>
                 <td className="px-4 py-3">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                    {txn.category ?? 'uncategorized'}
-                  </span>
+                  <span className="badge capitalize">{txn.category ?? 'uncategorized'}</span>
                 </td>
                 <td className="px-4 py-3">
                   <ProvenanceChip provenance={txn.provenance} />

@@ -1,6 +1,7 @@
 // Root application component — wires the SPA routes and auth guards.
 import { Routes, Route, Navigate } from 'react-router-dom';
 import RequireAuth from './auth/RequireAuth';
+import RequireOperator from './auth/RequireOperator';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Upload from './pages/Upload';
@@ -51,7 +52,9 @@ export default function App(): JSX.Element {
         path="/ops"
         element={
           <RequireAuth>
-            <Ops />
+            <RequireOperator>
+              <Ops />
+            </RequireOperator>
           </RequireAuth>
         }
       />

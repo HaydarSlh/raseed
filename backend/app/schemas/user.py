@@ -9,11 +9,26 @@ from fastapi_users import schemas
 
 class UserRead(schemas.BaseUser[uuid.UUID]):
     is_operator: bool = False
+    username: str | None = None
+    phone_number: str | None = None
+    country: str | None = None
+    city: str | None = None
+    bank_name: str | None = None
 
 
 class UserCreate(schemas.BaseUserCreate):
-    pass
+    # Required at registration (also the display name in the UI); the rest optional.
+    username: str
+    phone_number: str | None = None
+    country: str | None = None
+    city: str | None = None
+    bank_name: str | None = None
 
 
 class UserUpdate(schemas.BaseUserUpdate):
     is_operator: bool | None = None
+    username: str | None = None
+    phone_number: str | None = None
+    country: str | None = None
+    city: str | None = None
+    bank_name: str | None = None

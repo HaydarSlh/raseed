@@ -47,7 +47,7 @@ export default function UploadDropzone({ onSuccess }: Props): JSX.Element {
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${
-          isDragging ? 'border-indigo-400 bg-indigo-50' : 'border-gray-300 bg-white hover:border-indigo-300'
+          isDragging ? 'border-indigo-400 bg-indigo-50' : 'border-line bg-surface hover:border-indigo-300'
         }`}
         onClick={() => inputRef.current?.click()}
         role="button"
@@ -64,11 +64,11 @@ export default function UploadDropzone({ onSuccess }: Props): JSX.Element {
           onChange={(e) => { const f = e.target.files?.[0]; if (f) setFile(f); }}
         />
         {file ? (
-          <p className="text-sm font-medium text-gray-700">{file.name}</p>
+          <p className="text-sm font-medium text-ink">{file.name}</p>
         ) : (
           <>
-            <p className="text-gray-500 text-sm mb-1">Drop a CSV bank statement here</p>
-            <p className="text-gray-400 text-xs">or click to select — max 10 MB</p>
+            <p className="text-faint text-sm mb-1">Drop a CSV bank statement here</p>
+            <p className="text-faint text-xs">or click to select — max 10 MB</p>
           </>
         )}
       </div>

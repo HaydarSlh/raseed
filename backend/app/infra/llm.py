@@ -96,24 +96,33 @@ class GeminiGrokLLM(BaseLLM):
     async def _call_grok(self, prompt: str, *, tier: Tier) -> Completion:
         import httpx
 
-        grok_model = "grok-3-mini" if tier == "mechanical" else "grok-3"
+        # Groq (api.groq.com) failover — the gsk_ key prefix is a Groq key, not
+        # an xAI/Grok key. Groq serves Llama models via an OpenAI-compatible API.
+        groq_model = "llama-3.1-8b-instant" if tier == "mechanical" else "llama-3.3-70b-versatile"
         async for attempt in with_retry(max_attempts=2, timeout=30.0):
             with attempt:
-                with span("llm.grok", model=grok_model):
+                with span("llm.groq", model=groq_model):
                     async with httpx.AsyncClient() as client:
                         response = await client.post(
-                            "https://api.x.ai/v1/chat/completions",
+                            "https://api.groq.com/openai/v1/chat/completions",
                             headers={"Authorization": f"Bearer {self._grok_key}"},
-                            json={"model": grok_model, "messages": [{"role": "user", "content": prompt}]},
+                            json={"model": groq_model, "messages": [{"role": "user", "content": prompt}]},
                             timeout=30.0,
                         )
                         if 400 <= response.status_code < 500:
-                            raise UpstreamError(f"Grok 4xx: {response.status_code}")
+                            body = response.text[:300]
+                            log.warning(
+                                "llm.groq.4xx",
+                                status=response.status_code,
+                                model=groq_model,
+                                body=body,
+                            )
+                            raise UpstreamError(f"Groq {response.status_code}: {body}")
                         response.raise_for_status()
                         data = response.json()
                         text = data["choices"][0]["message"]["content"]
-                        return Completion(text, provider="grok", model=grok_model)
-        raise UpstreamError("Grok retries exhausted")  # pragma: no cover
+                        return Completion(text, provider="groq", model=groq_model)
+        raise UpstreamError("Groq retries exhausted")  # pragma: no cover
 
 
 def build_llm(*, gemini_api_key: str = "", grok_api_key: str = "", use_fake: bool = False) -> BaseLLM:

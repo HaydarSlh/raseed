@@ -15,7 +15,7 @@ export default function ConfidenceChart({ series, threshold }: Props): JSX.Eleme
     return (
       <div
         data-testid="confidence-chart-empty"
-        className="flex items-center justify-center h-20 text-sm text-gray-400 bg-gray-50 rounded"
+        className="flex items-center justify-center h-20 text-sm text-faint bg-elevated rounded"
       >
         No drift data yet
       </div>

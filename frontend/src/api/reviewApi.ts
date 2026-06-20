@@ -25,6 +25,11 @@ export interface ConfirmResponse {
   needs_review: boolean;
 }
 
+export interface RelabelAllResponse {
+  queued: boolean;
+  user_id: string;
+}
+
 export const reviewApi = {
   async getQueue(): Promise<ReviewQueueResponse> {
     const res = await fetch(`${API_BASE_URL}/review/queue`, {
@@ -60,5 +65,14 @@ export const reviewApi = {
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json() as Promise<{ review_mode: string }>;
+  },
+
+  async relabelAll(): Promise<RelabelAllResponse> {
+    const res = await fetch(`${API_BASE_URL}/review/relabel-all`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json() as Promise<RelabelAllResponse>;
   },
 };

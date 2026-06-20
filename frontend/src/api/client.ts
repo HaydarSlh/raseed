@@ -5,8 +5,10 @@ import type {
   ForecastView,
   ManualEntryInput,
   ManualTransactionResultView,
+  RegisterInput,
   SubscriptionView,
   UploadResultView,
+  UserView,
 } from './types';
 
 export const API_BASE_URL: string =
@@ -35,10 +37,10 @@ async function apiFetch(path: string, init: RequestInit = {}): Promise<Response>
 }
 
 export const authApi = {
-  async register(email: string, password: string): Promise<void> {
+  async register(input: RegisterInput): Promise<void> {
     await apiFetch('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify(input),
     });
   },
 
@@ -54,9 +56,9 @@ export const authApi = {
     return data.access_token;
   },
 
-  async me(): Promise<Record<string, unknown>> {
+  async me(): Promise<UserView> {
     const res = await apiFetch('/users/me');
-    return res.json() as Promise<Record<string, unknown>>;
+    return res.json() as Promise<UserView>;
   },
 
   logout(): void {

@@ -61,6 +61,7 @@ async def trigger_retrain(
         raise HTTPException(status_code=409, detail="retrain cooldown active; pass force=true to override")
     if not enqueued and not body.force:
         raise HTTPException(status_code=409, detail="retrain cooldown active; pass force=true to override")
+    await session.commit()
     return RetrainResponse(retrain_run_id=run.id, status=run.status.value)
 
 

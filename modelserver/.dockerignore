@@ -1,0 +1,12 @@
+# Lean modelserver build context (the root .dockerignore does NOT apply to
+# `build: ./modelserver` — keep artifacts/ since the .onnx model ships there).
+**/__pycache__/
+**/*.py[cod]
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store

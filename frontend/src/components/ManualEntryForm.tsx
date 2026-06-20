@@ -53,7 +53,7 @@ export default function ManualEntryForm({ onSuccess }: Props): JSX.Element {
         <div>
           <label
             htmlFor="txn-date"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-ink mb-1"
           >
             Date
           </label>
@@ -62,13 +62,13 @@ export default function ManualEntryForm({ onSuccess }: Props): JSX.Element {
             type="date"
             value={txnDate}
             onChange={(e) => setTxnDate(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
         </div>
         <div>
           <label
             htmlFor="txn-amount"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-ink mb-1"
           >
             Amount (negative = spend)
           </label>
@@ -79,7 +79,7 @@ export default function ManualEntryForm({ onSuccess }: Props): JSX.Element {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="-8.99"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
           />
         </div>
       </div>
@@ -87,7 +87,7 @@ export default function ManualEntryForm({ onSuccess }: Props): JSX.Element {
       <div>
         <label
           htmlFor="txn-description"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-ink mb-1"
         >
           Description
         </label>
@@ -98,16 +98,16 @@ export default function ManualEntryForm({ onSuccess }: Props): JSX.Element {
           onChange={(e) => setDescription(e.target.value)}
           placeholder="e.g. APPLE MUSIC"
           maxLength={1024}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
         />
       </div>
 
       <div>
         <label
           htmlFor="txn-merchant"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-ink mb-1"
         >
-          Merchant <span className="text-gray-400 font-normal">(optional)</span>
+          Merchant <span className="text-faint font-normal">(optional)</span>
         </label>
         <input
           id="txn-merchant"
@@ -115,7 +115,7 @@ export default function ManualEntryForm({ onSuccess }: Props): JSX.Element {
           value={merchant}
           onChange={(e) => setMerchant(e.target.value)}
           placeholder="e.g. Apple"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+          className="w-full border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
         />
       </div>
 

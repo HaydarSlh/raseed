@@ -68,6 +68,35 @@ def _compute_sha256(onnx_bytes: bytes) -> str:
     return hashlib.sha256(onnx_bytes).hexdigest()
 
 
+def _upload_artifacts(sha256: str, files: dict[str, bytes]) -> None:
+    """Upload model artifacts to MinIO (self-contained — no backend package import).
+
+    The trainer image deliberately excludes the backend `app` package (Art. III
+    isolation), so it cannot import `app.infra.minio`. This reads MinIO config
+    directly from env vars (set via compose env_file) and uses the `minio` SDK
+    directly — same content-addressed layout (categorizer/<sha>/<file>).
+    """
+    import io
+    import os
+
+    from minio import Minio
+
+    endpoint = os.environ.get("MINIO_ENDPOINT", "minio:9000")
+    access_key = os.environ.get("MINIO_ROOT_USER", "raseed")
+    secret_key = os.environ.get("MINIO_ROOT_PASSWORD", "raseed_local_dev")
+    bucket = os.environ.get("MINIO_ARTIFACTS_BUCKET", "model-artifacts")
+
+    client = Minio(endpoint, access_key=access_key, secret_key=secret_key, secure=False)
+    if not client.bucket_exists(bucket):
+        client.make_bucket(bucket)
+        log.info("trainer.minio.bucket_created", bucket=bucket)
+
+    for filename, data in files.items():
+        key = f"categorizer/{sha256}/{filename}"
+        client.put_object(bucket, key, io.BytesIO(data), length=len(data))
+        log.info("trainer.minio.artifact_uploaded", sha256=sha256, key=key)
+
+
 def _partial_unfreeze_retrain(labels: list[dict[str, Any]], champion_onnx_path: Path | None) -> tuple[bytes, bytes, dict]:
     """Partial-unfreeze CPU retrain seeded from the current champion (R1).
 
@@ -235,11 +264,8 @@ def run(
         model_card["sha256"] = sha256
         model_card_bytes = json.dumps(model_card, indent=2).encode()
 
-        from sys import path as sys_path
-        sys_path.insert(0, str(Path(__file__).parent.parent / "backend"))
         try:
-            from app.infra.minio import upload_artifact
-            upload_artifact(sha256, {
+            _upload_artifacts(sha256, {
                 "categorizer.onnx": onnx_bytes,
                 "tokenizer.json": tokenizer_bytes,
                 "model_card.json": model_card_bytes,

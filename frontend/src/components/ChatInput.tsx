@@ -32,13 +32,13 @@ export default function ChatInput({ onSend, isStreaming }: Props) {
         disabled={isStreaming}
         onKeyDown={handleKeyDown}
         placeholder="Ask about your finances…"
-        className="flex-1 resize-none rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+        className="flex-1 resize-none rounded-lg border border-line bg-surface text-ink placeholder:text-faint px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 disabled:opacity-50"
         data-testid="chat-input"
       />
       <button
         type="submit"
         disabled={isStreaming}
-        className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="btn-primary"
         data-testid="chat-send"
       >
         {isStreaming ? 'Thinking…' : 'Send'}

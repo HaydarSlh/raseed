@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import uuid
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -44,10 +44,20 @@ async def test_agent_stays_bounded() -> None:
 
     import app.services.agent.tools.reads  # ensure registered  # noqa: F401
 
+    # get_subscriptions runs `await _session.execute(...)` then `.scalars().all()`
+    # synchronously; stub the result so the tool succeeds and the loop thrashes
+    # to the cap. execute must be async; its result must be a plain MagicMock.
+    exec_result = MagicMock()
+    exec_result.scalars.return_value.all.return_value = []
+    mock_session = AsyncMock()
+    mock_session.execute = AsyncMock(return_value=exec_result)
+
     result = await run_agent(
         "complex question",
         llm=llm,
         context=[],
+        session=mock_session,
+        user_id=uuid.uuid4(),
         max_iterations=8,
         token_budget=999999,
     )

@@ -43,3 +43,8 @@ class ReviewModeResponse(BaseModel):
 
 class ReviewModeRequest(BaseModel):
     review_mode: str
+
+
+class RelabelAllResponse(BaseModel):
+    queued: bool
+    user_id: uuid.UUID

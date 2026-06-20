@@ -68,6 +68,8 @@ async def chat(
                 message,
                 llm=llm,
                 context=context,
+                session=session,
+                user_id=user.id,
                 max_iterations=settings.agent_max_iterations,
                 token_budget=settings.agent_token_budget,
             )

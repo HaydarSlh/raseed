@@ -1,6 +1,6 @@
 // Ops dashboard: model registry, drift monitor, retrain history (Phase 5, US2-US4, operator-only)
 import { useCallback, useEffect, useState } from 'react';
-import NavBar from '../components/NavBar';
+import AppLayout from '../components/AppLayout';
 import ConfidenceChart from '../components/ConfidenceChart';
 import { opsApi } from '../api/opsApi';
 import type { ModelsResponse, DriftResponse, RetrainsResponse } from '../api/opsApi';
@@ -68,10 +68,9 @@ export default function Ops(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavBar />
+    <AppLayout>
       <main className="max-w-4xl mx-auto px-4 py-6 space-y-8">
-        <h1 className="text-xl font-semibold text-gray-800">Ops Dashboard</h1>
+        <h1 className="text-xl font-semibold text-ink">Ops Dashboard</h1>
 
         {toast && (
           <div
@@ -82,43 +81,43 @@ export default function Ops(): JSX.Element {
           </div>
         )}
 
-        {loading && <p className="text-sm text-gray-500">Loading…</p>}
+        {loading && <p className="text-sm text-faint">Loading…</p>}
         {error && <p data-testid="ops-error" className="text-sm text-red-600">{error}</p>}
 
         {!loading && !error && (
           <>
             {/* Model Registry */}
-            <section className="bg-white rounded-lg border border-gray-200 p-5 space-y-4">
-              <h2 className="font-medium text-gray-800">Model Registry</h2>
+            <section className="bg-surface rounded-lg border border-line p-5 space-y-4">
+              <h2 className="font-medium text-ink">Model Registry</h2>
 
               {models?.champion ? (
                 <div className="text-sm">
-                  <span className="font-medium text-gray-700">Champion: </span>
+                  <span className="font-medium text-ink">Champion: </span>
                   <span data-testid="champion-version">{models.champion.version}</span>
-                  <span className="ml-2 text-gray-400 font-mono text-xs">
+                  <span className="ml-2 text-faint font-mono text-xs">
                     {models.champion.sha256.slice(0, 12)}
                   </span>
                   {models.champion.metrics?.macro_f1 != null && (
-                    <span className="ml-2 text-gray-500">
+                    <span className="ml-2 text-faint">
                       F1 {(models.champion.metrics.macro_f1 as number).toFixed(3)}
                     </span>
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">No champion deployed.</p>
+                <p className="text-sm text-faint">No champion deployed.</p>
               )}
 
               {models?.promotable && models.promotable.length > 0 && (
                 <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-gray-600">Promotable challengers</h3>
+                  <h3 className="text-sm font-medium text-faint">Promotable challengers</h3>
                   {models.promotable.map(m => (
                     <div
                       key={m.id}
                       data-testid="promotable-row"
                       className="flex items-center gap-3 text-sm"
                     >
-                      <span className="font-mono text-xs text-gray-500">{m.sha256.slice(0, 12)}</span>
-                      <span className="text-gray-700">{m.version}</span>
+                      <span className="font-mono text-xs text-faint">{m.sha256.slice(0, 12)}</span>
+                      <span className="text-ink">{m.version}</span>
                       {m.gate_verdict && (
                         <span className="text-green-600 text-xs">{m.gate_verdict}</span>
                       )}
@@ -148,7 +147,7 @@ export default function Ops(): JSX.Element {
                   data-testid="retrain-force-btn"
                   onClick={() => void handleRetrain(true)}
                   disabled={retrainBusy}
-                  className="text-sm px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 disabled:opacity-50"
+                  className="text-sm px-4 py-2 bg-elevated text-ink rounded hover:bg-line disabled:opacity-50"
                 >
                   Force
                 </button>
@@ -156,8 +155,8 @@ export default function Ops(): JSX.Element {
             </section>
 
             {/* Drift Monitor */}
-            <section className="bg-white rounded-lg border border-gray-200 p-5 space-y-4">
-              <h2 className="font-medium text-gray-800">Drift Monitor</h2>
+            <section className="bg-surface rounded-lg border border-line p-5 space-y-4">
+              <h2 className="font-medium text-ink">Drift Monitor</h2>
 
               {drift && (
                 <>
@@ -204,32 +203,32 @@ export default function Ops(): JSX.Element {
             </section>
 
             {/* Retrain History */}
-            <section className="bg-white rounded-lg border border-gray-200 p-5 space-y-3">
-              <h2 className="font-medium text-gray-800">Retrain History</h2>
+            <section className="bg-surface rounded-lg border border-line p-5 space-y-3">
+              <h2 className="font-medium text-ink">Retrain History</h2>
               {retrains && retrains.runs.length === 0 && (
-                <p className="text-sm text-gray-500">No retrains yet.</p>
+                <p className="text-sm text-faint">No retrains yet.</p>
               )}
               {retrains && retrains.runs.map(run => (
                 <div
                   key={run.id}
                   data-testid="retrain-run-row"
-                  className="flex items-start gap-4 text-sm border-b border-gray-100 pb-2 last:border-0 last:pb-0"
+                  className="flex items-start gap-4 text-sm border-b border-line pb-2 last:border-0 last:pb-0"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-700">{run.trigger_reason}</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="font-medium text-ink">{run.trigger_reason}</p>
+                    <p className="text-xs text-faint">
                       {new Date(run.created_at).toLocaleString()}
                     </p>
                   </div>
                   <div className="text-right text-xs space-y-0.5">
-                    <p className={`font-medium ${run.status === 'completed' ? 'text-green-600' : run.status === 'failed' ? 'text-red-600' : 'text-gray-600'}`}>
+                    <p className={`font-medium ${run.status === 'completed' ? 'text-green-600' : run.status === 'failed' ? 'text-red-600' : 'text-faint'}`}>
                       {run.status}
                     </p>
                     {run.gate_verdict && (
-                      <p className="text-gray-500">{run.gate_verdict}</p>
+                      <p className="text-faint">{run.gate_verdict}</p>
                     )}
                     {run.champion_macro_f1 != null && run.challenger_macro_f1 != null && (
-                      <p className="text-gray-500">
+                      <p className="text-faint">
                         {run.champion_macro_f1.toFixed(3)} → {run.challenger_macro_f1.toFixed(3)}
                       </p>
                     )}
@@ -240,7 +239,7 @@ export default function Ops(): JSX.Element {
           </>
         )}
       </main>
-    </div>
+    </AppLayout>
   );
 }
 
@@ -260,13 +259,13 @@ function Metric({
     (direction === 'above' ? value < threshold : value > threshold);
 
   return (
-    <div className="bg-gray-50 rounded p-3">
-      <p className="text-xs text-gray-500 mb-1">{label}</p>
-      <p className={`text-lg font-semibold ${violated ? 'text-red-600' : 'text-gray-800'}`}>
+    <div className="bg-elevated rounded p-3">
+      <p className="text-xs text-faint mb-1">{label}</p>
+      <p className={`text-lg font-semibold ${violated ? 'text-red-600' : 'text-ink'}`}>
         {value != null ? value.toFixed(3) : '—'}
       </p>
       {threshold != null && (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-faint">
           {direction === 'above' ? 'min' : 'max'} {threshold}
         </p>
       )}

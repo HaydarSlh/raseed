@@ -1,6 +1,6 @@
 // Account settings page: right-to-erasure (Phase 6, US4)
 import { useState } from 'react';
-import NavBar from '../components/NavBar';
+import AppLayout from '../components/AppLayout';
 import { accountApi } from '../api/accountApi';
 import type { ErasureResponse } from '../api/accountApi';
 
@@ -27,14 +27,13 @@ export default function Account(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavBar />
+    <AppLayout>
       <main className="max-w-2xl mx-auto px-4 py-8 space-y-8">
-        <h1 className="text-xl font-semibold text-gray-800">Account Settings</h1>
+        <h1 className="text-xl font-semibold text-ink">Account Settings</h1>
 
-        <section className="bg-white border border-red-200 rounded-lg p-6 space-y-4">
+        <section className="bg-surface border border-red-200 rounded-lg p-6 space-y-4">
           <h2 className="text-base font-semibold text-red-700">Delete My Account</h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-faint">
             This permanently deletes all your transactions, goals, corrections, memories, and
             account data. This action <strong>cannot be undone</strong>.
           </p>
@@ -47,7 +46,7 @@ export default function Account(): JSX.Element {
           ) : (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-ink mb-1">
                   Type <span className="font-mono font-bold">DELETE</span> to confirm
                 </label>
                 <input
@@ -56,7 +55,7 @@ export default function Account(): JSX.Element {
                   value={confirmValue}
                   onChange={e => setConfirmValue(e.target.value)}
                   placeholder="DELETE"
-                  className="block w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                  className="block w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
                   disabled={loading}
                 />
               </div>
@@ -78,6 +77,6 @@ export default function Account(): JSX.Element {
           )}
         </section>
       </main>
-    </div>
+    </AppLayout>
   );
 }

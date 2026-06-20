@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import json
 import re
+import uuid
 from pathlib import Path
 from typing import Any
 
 import structlog
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infra.llm import BaseLLM, Tier
 from app.services.agent.tools.registry import dispatch
@@ -120,6 +122,8 @@ async def run_agent(
     *,
     llm: BaseLLM,
     context: list[dict[str, str]],
+    session: AsyncSession,
+    user_id: uuid.UUID,
     max_iterations: int = 8,
     token_budget: int = 16000,
 ) -> AgentResult:
@@ -152,11 +156,32 @@ async def run_agent(
 
             action = _extract_json(response_text)
             if action is None:
-                # LLM produced unparseable output — treat as final
+                # LLM produced unparseable output. If we already collected citations
+                # from a prior tool call, try one synthesis pass to extract a clean
+                # final answer; fall back to the raw prose with the collected citations.
                 log.warning("agent.unparseable_output", text=response_text[:200])
+                if citations:
+                    synth = (
+                        f"{prompt}\n{response_text}\n\n"
+                        "The tool results above contain useful information. "
+                        'Now write the final answer for the user as JSON: '
+                        '{"final": "<plain-language answer using the tool results>", "citations": []}'
+                    )
+                    try:
+                        completion = await llm.complete(synth, tier="synthesis")
+                        synth_action = _extract_json(completion.text)
+                        if synth_action and "final" in synth_action:
+                            return AgentResult(
+                                answer=str(synth_action["final"]),
+                                citations=citations,
+                                bounded=False,
+                                iterations=iterations,
+                            )
+                    except Exception:
+                        pass
                 return AgentResult(
                     answer=response_text,
-                    citations=[],
+                    citations=citations,
                     bounded=False,
                     iterations=iterations,
                 )
@@ -177,13 +202,17 @@ async def run_agent(
                 tool_args = action.get("args", {})
 
                 log.info("agent.tool_call", tool=tool_name, iteration=iteration, tokens_so_far=token_used)
-                result = await dispatch(tool_name, tool_args if isinstance(tool_args, dict) else {})
+                dispatch_args = dict(tool_args) if isinstance(tool_args, dict) else {}
+                # Inject RLS-scoped session + user_id (never sourced from the LLM).
+                dispatch_args["_session"] = session
+                dispatch_args["_user_id"] = user_id
+                result = await dispatch(tool_name, dispatch_args)
                 result_text = json.dumps(result)
                 result_tokens = _count_tokens(result_text)
                 token_used += result_tokens
                 log.debug("agent.tool_result", tool=tool_name, result_tokens=result_tokens, tokens_so_far=token_used)
 
-                prompt = f"{prompt}\n{response_text}\nTool result: {result_text}\n"
+                prompt = f"{prompt}\n{response_text}\nTool result: {result_text}\n\nAssistant:"
 
                 # Collect knowledge citations from tool results
                 if "passages" in result:

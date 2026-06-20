@@ -1,0 +1,10 @@
+# Lean frontend build context (the root .dockerignore does NOT apply to
+# `build: ./frontend` — Docker only reads .dockerignore from the context root).
+node_modules/
+dist/
+.vite/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store

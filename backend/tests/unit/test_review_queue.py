@@ -121,3 +121,52 @@ async def test_queue_is_rls_scoped(user_id: uuid.UUID) -> None:
     MockRepo.assert_called_with(mock_session, user_id)
     assert isinstance(response, ReviewQueueResponse)
     assert response.items == []
+
+
+@pytest.mark.asyncio
+async def test_confirm_endpoint_commits_session(user_id: uuid.UUID) -> None:
+    """The /review/confirm endpoint must commit the session — without it the service's
+    flush() rolls back on session teardown and the row reappears on refresh."""
+    txn = _make_txn(user_id)
+
+    mock_session = AsyncMock()
+    mock_session.commit = AsyncMock()
+    mock_session.flush = AsyncMock()
+
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = txn
+    mock_session.execute = AsyncMock(return_value=mock_result)
+
+    with patch("app.services.review.queue.CorrectionsRepository") as MockRepo:
+        mock_repo = AsyncMock()
+        mock_repo.get_by_transaction = AsyncMock(return_value=None)
+        mock_repo.write_correction = AsyncMock(side_effect=lambda c: c)
+        MockRepo.return_value = mock_repo
+
+        from app.api.review import confirm_review
+        from app.schemas.review import ConfirmRequest
+
+        body = ConfirmRequest(transaction_id=txn.id, category="dine_out")
+        await confirm_review(body, user=MagicMock(id=str(user_id)), session=mock_session)
+
+    mock_session.commit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_relabel_all_endpoint_enqueues_job(user_id: uuid.UUID) -> None:
+    """The /review/relabel-all endpoint enqueues a batch relabel job for the caller."""
+    mock_session = AsyncMock()
+
+    fake_queue = MagicMock()
+    fake_queue.enqueue = MagicMock()
+
+    with patch("app.api.review.get_recompute_queue", return_value=fake_queue):
+        from app.api.review import relabel_all
+
+        response = await relabel_all(user=MagicMock(id=str(user_id)), session=mock_session)
+
+    fake_queue.enqueue.assert_called_once()
+    call_args = fake_queue.enqueue.call_args
+    assert call_args[0][0] == "workers.relabel.run_batch_relabel"
+    assert call_args.kwargs["kwargs"]["user_id"] == str(user_id)
+    assert response.queued is True

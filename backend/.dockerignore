@@ -1,0 +1,15 @@
+# Lean backend build context (the root .dockerignore does NOT apply to
+# `build: ./backend` — Docker only reads .dockerignore from the context root).
+.venv/
+venv/
+**/__pycache__/
+**/*.py[cod]
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+raseed_backend.egg-info/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
